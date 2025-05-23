@@ -8,15 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
         backgroundColor: '#fff',
     });
 
-    // --- Make canvas fill the available screen, but cap size on mobile ---
+    // --- Make canvas fill the available screen, but cap size for performance ---
     function resizeCanvasToFullScreen() {
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        // Cap size for mobile
-        if (window.innerWidth < 800) {
-            width = Math.min(width, 800);
-            height = Math.min(height, 1200);
-        }
+        let width = Math.min(window.innerWidth, 1200);
+        let height = Math.min(window.innerHeight, 900);
         canvas.setWidth(width);
         canvas.setHeight(height);
         canvas.calcOffset();

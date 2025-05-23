@@ -16,7 +16,7 @@ export function setupViewControls(appState) {
         setCanvasZoom(newZoom, appState);
     });
 
-    // Configurar el paneo con el botón medio del mouse SOLO sobre el canvas
+    // Paneo con botón central del mouse sobre el canvas
     canvasEl.addEventListener('mousedown', (e) => {
         if (e.button === 1) {
             e.preventDefault();
@@ -69,22 +69,6 @@ export function setupViewControls(appState) {
         if (typeof appState.closeAllDropdowns === 'function') appState.closeAllDropdowns(); 
     });
     
-    document.getElementById('fit-to-screen').addEventListener('click', () => {
-        const canvasWidth = fabricCanvas.width;
-        const canvasHeight = fabricCanvas.height;
-        const wrapperWidth = canvasWrapper.clientWidth;
-        const wrapperHeight = canvasWrapper.clientHeight;
-        
-        const scaleX = wrapperWidth / canvasWidth;
-        const scaleY = wrapperHeight / canvasHeight;
-        const newZoom = Math.min(scaleX, scaleY) * 0.9; // 90% del tamaño para dejar un margen
-        
-        setCanvasZoom(newZoom, appState);
-        centerCanvas(fabricCanvas);
-        
-        if (typeof appState.closeAllDropdowns === 'function') appState.closeAllDropdowns();
-    });
-
     document.getElementById('apply-canvas-size').addEventListener('click', () => {
         const newWidth = parseInt(document.getElementById('canvas-width-input').value, 10);
         const newHeight = parseInt(document.getElementById('canvas-height-input').value, 10);

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Simple CAD Web App with Fabric.js</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Add Fabric.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dxf@5.2.0/dist/dxf.js"></script>
+</head>
+<body>
+    <div class="toolbar">
+        <button id="tool-line" class="tool-button active" data-tool="line">Line</button>
+        <button id="tool-rect" class="tool-button" data-tool="rect">Rectangle</button>
+        <button id="tool-circle" class="tool-button" data-tool="circle">Circle</button>
+        <input type="color" id="color-picker" value="#000000" title="Stroke Color">
+        <input type="number" id="stroke-width-picker" value="2" min="1" max="50" title="Stroke Width">
+        <button id="clear-canvas">Clear</button>
+        <button id="save-svg">Save SVG</button>
+        <input type="file" id="load-svg-input" accept=".svg" style="display: none;">
+        <button id="load-svg-button">Load SVG</button>
+    </div>
+    <canvas id="drawing-canvas"></canvas> <!-- Fabric will take over this canvas -->
+    <div id="status-message"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

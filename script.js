@@ -76,6 +76,7 @@ class ToolManager {
             }
         };
         this.setupToolButtons();
+        this.setupBrushEvents();
     }
 
     setupToolButtons() {
@@ -103,12 +104,11 @@ class ToolManager {
             this.canvas.hoverCursor = 'move';
             this.canvas.getObjects().forEach(obj => obj.set({ selectable: true, evented: true }));
         } else if (this.currentTool === 'brush') {
-            this.canvas.isDrawingMode = true;
+            this.canvas.isDrawingMode = false; // Set to false to handle drawing manually
             this.canvas.selection = false;
             this.canvas.defaultCursor = 'crosshair';
             this.canvas.hoverCursor = 'crosshair';
             this.canvas.getObjects().forEach(obj => obj.set({ selectable: false, evented: false }));
-            this.setupBrushMode();
         } else {
             this.canvas.isDrawingMode = false;
             this.canvas.selection = false;
@@ -119,23 +119,32 @@ class ToolManager {
         this.canvas.discardActiveObject().renderAll();
     }
 
-    setupBrushMode() {
+    setupBrushEvents() {
         this.canvas.on('mouse:down', (o) => {
             if (this.currentTool !== 'brush') return;
+            
             this.brushPoints = [];
             const pointer = this.canvas.getPointer(o.e);
             this.brushPoints.push([pointer.x, pointer.y, 0.5]); // Add pressure
+            
+            // Create initial brush stroke
+            this.updateBrushStroke();
         });
 
         this.canvas.on('mouse:move', (o) => {
             if (this.currentTool !== 'brush' || !this.brushPoints.length) return;
+            
             const pointer = this.canvas.getPointer(o.e);
             this.brushPoints.push([pointer.x, pointer.y, 0.5]); // Add pressure
+            
+            // Update brush stroke
             this.updateBrushStroke();
         });
 
         this.canvas.on('mouse:up', () => {
             if (this.currentTool !== 'brush' || !this.brushPoints.length) return;
+            
+            // Finalize the brush stroke
             this.finalizeBrushStroke();
         });
     }
@@ -176,6 +185,8 @@ class ToolManager {
     }
 
     getSvgPathFromStroke(points) {
+        if (!points.length) return '';
+        
         const d = points.reduce((acc, [x0, y0], i, arr) => {
             const [x1, y1] = arr[(i + 1) % arr.length];
             acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);

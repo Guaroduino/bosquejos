@@ -67,16 +67,23 @@ export class CanvasRulers {
 
         // Calcular intervalos basados en el zoom
         const interval = this.calculateInterval(zoom);
+        // El desplazamiento del viewport (paneo) en pixeles
         const offsetX = vpt[4];
         const offsetY = vpt[5];
 
+        // Calcular el rango visible en coordenadas canvas
+        const visibleStartX = Math.max(0, -offsetX / zoom);
+        const visibleEndX = Math.min(width, (this.container.clientWidth - offsetX) / zoom);
+        const visibleStartY = Math.max(0, -offsetY / zoom);
+        const visibleEndY = Math.min(height, (this.container.clientHeight - offsetY) / zoom);
+
         // Marcas horizontales (arriba)
-        for (let x = 0; x <= width; x += interval) {
+        for (let x = Math.floor(visibleStartX / interval) * interval; x <= visibleEndX; x += interval) {
             const px = Math.round(x * zoom + offsetX);
             if (px < 0 || px > width * zoom) continue;
             const mark = document.createElement('div');
             mark.className = 'ruler-mark ruler-mark-h';
-            mark.style.left = `${x}px`;
+            mark.style.left = `${px / zoom}px`;
             mark.style.height = '6px';
             mark.style.width = '1px';
             mark.style.bottom = '0';
@@ -85,7 +92,7 @@ export class CanvasRulers {
             const text = document.createElement('div');
             text.className = 'ruler-text ruler-text-h';
             text.textContent = x;
-            text.style.left = `${x}px`;
+            text.style.left = `${px / zoom}px`;
             text.style.position = 'absolute';
             text.style.bottom = '2px';
 
@@ -94,12 +101,12 @@ export class CanvasRulers {
         }
 
         // Marcas verticales (izquierda)
-        for (let y = 0; y <= height; y += interval) {
+        for (let y = Math.floor(visibleStartY / interval) * interval; y <= visibleEndY; y += interval) {
             const py = Math.round(y * zoom + offsetY);
             if (py < 0 || py > height * zoom) continue;
             const mark = document.createElement('div');
             mark.className = 'ruler-mark ruler-mark-v';
-            mark.style.top = `${y}px`;
+            mark.style.top = `${py / zoom}px`;
             mark.style.width = '6px';
             mark.style.height = '1px';
             mark.style.right = '0';
@@ -108,7 +115,7 @@ export class CanvasRulers {
             const text = document.createElement('div');
             text.className = 'ruler-text ruler-text-v';
             text.textContent = y;
-            text.style.top = `${y}px`;
+            text.style.top = `${py / zoom}px`;
             text.style.position = 'absolute';
             text.style.right = '2px';
 

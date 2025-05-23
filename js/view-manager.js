@@ -2,12 +2,13 @@
 export function setupViewControls(appState) {
     const fabricCanvas = appState.fabricCanvas;
     const canvasWrapper = document.getElementById('canvas-wrapper');
+    const canvasEl = document.getElementById('editor-canvas');
     let isPanning = false;
     let lastPosX = 0;
     let lastPosY = 0;
 
-    // Configurar el zoom con la rueda del mouse
-    canvasWrapper.addEventListener('wheel', (e) => {
+    // Configurar el zoom con la rueda del mouse SOLO sobre el canvas
+    canvasEl.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY;
         const zoom = fabricCanvas.getZoom();
@@ -15,38 +16,33 @@ export function setupViewControls(appState) {
         setCanvasZoom(newZoom, appState);
     });
 
-    // Configurar el paneo con el botón medio del mouse
-    canvasWrapper.addEventListener('mousedown', (e) => {
-        if (e.button === 1) { // Botón medio del mouse
+    // Configurar el paneo con el botón medio del mouse SOLO sobre el canvas
+    canvasEl.addEventListener('mousedown', (e) => {
+        if (e.button === 1) {
             e.preventDefault();
             isPanning = true;
             lastPosX = e.clientX;
             lastPosY = e.clientY;
-            canvasWrapper.style.cursor = 'grabbing';
+            canvasEl.style.cursor = 'grabbing';
         }
     });
 
-    canvasWrapper.addEventListener('mousemove', (e) => {
+    window.addEventListener('mousemove', (e) => {
         if (isPanning) {
             e.preventDefault();
             const deltaX = e.clientX - lastPosX;
             const deltaY = e.clientY - lastPosY;
             const zoom = fabricCanvas.getZoom();
-            
-            fabricCanvas.relativePan({
-                x: deltaX / zoom,
-                y: deltaY / zoom
-            });
-            
+            fabricCanvas.relativePan({ x: deltaX / zoom, y: deltaY / zoom });
             lastPosX = e.clientX;
             lastPosY = e.clientY;
         }
     });
 
-    canvasWrapper.addEventListener('mouseup', (e) => {
-        if (e.button === 1) {
+    window.addEventListener('mouseup', (e) => {
+        if (e.button === 1 && isPanning) {
             isPanning = false;
-            canvasWrapper.style.cursor = 'default';
+            canvasEl.style.cursor = 'default';
         }
     });
 

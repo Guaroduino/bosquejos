@@ -2,31 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Simple CAD Web App with Fabric.js</title>
+    <title>Fabric.js Drawing App</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Add Fabric.js library -->
+    <!-- Fabric.js -->
     <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
-    <!-- Add Perfect Freehand -->
+    <!-- Perfect Freehand (exposes window.getStroke) -->
     <script src="https://cdn.jsdelivr.net/npm/perfect-freehand@1.0.0/dist/perfect-freehand.min.js"></script>
 </head>
 <body>
     <div class="toolbar">
-        <button id="tool-select" class="tool-button" data-tool="select">Select</button>
-        <button id="tool-line" class="tool-button active" data-tool="line">Line</button>
-        <button id="tool-rect" class="tool-button" data-tool="rect">Rectangle</button>
-        <button id="tool-circle" class="tool-button" data-tool="circle">Circle</button>
-        <button id="tool-brush" class="tool-button" data-tool="brush">Brush</button>
-        <input type="color" id="color-picker" value="#000000" title="Stroke Color">
-        <input type="number" id="stroke-width-picker" value="2" min="1" max="50" title="Stroke Width">
+        <button id="tool-select">Select</button>
+        <button id="tool-line">Line</button>
+        <button id="tool-rect">Rect</button>
+        <button id="tool-circle">Circle</button>
+        <button id="tool-brush">Brush</button>
+        <input type="color" id="color-picker" value="#000000">
+        <input type="number" id="stroke-width-picker" value="2" min="1" max="50">
         <button id="clear-canvas">Clear</button>
         <button id="save-svg">Save SVG</button>
-        <input type="file" id="load-svg-input" accept=".svg" style="display: none;">
+        <input type="file" id="load-svg-input" accept=".svg" style="display:none;">
         <button id="load-svg-button">Load SVG</button>
     </div>
-    <canvas id="drawing-canvas"></canvas> <!-- Fabric will take over this canvas -->
-    <div id="status-message"></div>
-
+    <canvas id="drawing-canvas" width="900" height="500"></canvas>
     <script src="script.js"></script>
 </body>
 </html>

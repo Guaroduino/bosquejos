@@ -514,3 +514,6 @@ class DrawingApp {
 document.addEventListener('DOMContentLoaded', () => {
     const app = new DrawingApp();
 });
+
+// Ensure getStroke is available globally for brush tool
+const getStroke = window.perfectFreehand && window.perfectFreehand.getStroke;

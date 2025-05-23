@@ -41,26 +41,19 @@ body {
 
 #drawing-canvas {
     display: block;
-    margin: 24px auto;
+    margin: 0 auto;
     background: #fff;
     border: 1px solid #bbb;
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    width: 100vw;
+    height: calc(100vh - 80px);
+    max-width: 100vw;
+    max-height: calc(100vh - 80px);
 }
 
-/* Canvas styling is still useful for border and background if Fabric doesn't set it */
-#drawing-canvas {
-    border: 1px solid #000;
-    /* background-color: #fff; Fabric will set its own background */
-    max-width: 100%;
-    max-height: calc(100vh - 80px); /* Adjust based on toolbar height + margins */
-}
-
-/* Fabric.js adds a .canvas-container div around the canvas. */
-.canvas-container {
-    margin: 0 auto; /* Center if canvas is smaller than available space */
-    /* border: 1px solid #000; You can apply border here instead of directly on canvas */
-}
+/* Remove duplicate/conflicting rules */
+/* .canvas-container and #status-message can be styled as needed later */
 
 body.placing-svg-mode .canvas-container { /* Target fabric's container for cursor change */
     cursor: copy; /* Or use Fabric's default cursors */

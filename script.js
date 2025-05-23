@@ -8,6 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
         backgroundColor: '#fff',
     });
 
+    // --- Make canvas fill the available screen ---
+    function resizeCanvasToFullScreen() {
+        const toolbar = document.querySelector('.toolbar');
+        const toolbarHeight = toolbar.offsetHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight - toolbarHeight - 24; // 24px margin
+        canvas.setWidth(width);
+        canvas.setHeight(height);
+        canvas.calcOffset();
+        canvas.renderAll();
+    }
+    window.addEventListener('resize', resizeCanvasToFullScreen);
+    resizeCanvasToFullScreen();
+
     // --- State ---
     let currentTool = 'select';
     let currentColor = '#000000';

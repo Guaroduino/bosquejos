@@ -10,10 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Make canvas fill the available screen ---
     function resizeCanvasToFullScreen() {
-        const toolbar = document.querySelector('.toolbar');
-        const toolbarHeight = toolbar.offsetHeight;
         const width = window.innerWidth;
-        const height = window.innerHeight - toolbarHeight - 24; // 24px margin
+        const height = window.innerHeight;
         canvas.setWidth(width);
         canvas.setHeight(height);
         canvas.calcOffset();

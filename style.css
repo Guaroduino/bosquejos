@@ -2,17 +2,22 @@ body {
     font-family: sans-serif;
     margin: 0;
     background: #f4f4f4;
+    overflow: hidden;
 }
 
 .toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
     background: #333;
     padding: 10px;
     display: flex;
     gap: 10px;
     align-items: center;
-    border-radius: 6px;
-    margin: 16px auto 0 auto;
-    width: fit-content;
+    border-radius: 0 0 6px 6px;
+    width: 100vw;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
@@ -40,16 +45,17 @@ body {
 }
 
 #drawing-canvas {
-    display: block;
-    margin: 0 auto;
-    background: #fff;
-    border: 1px solid #bbb;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100vw;
-    height: calc(100vh - 80px);
-    max-width: 100vw;
-    max-height: calc(100vh - 80px);
+    height: 100vh;
+    background: #fff;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    display: block;
+    z-index: 1;
 }
 
 /* Remove duplicate/conflicting rules */

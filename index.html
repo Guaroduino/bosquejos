@@ -3,96 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor SVG Modular</title>
+    <title>Editor SVG Modular con Librería</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header class="top-toolbar">
-        <div class="dropdown" data-dropdown-group="file">
-            <button class="dropdown-button"><span>Archivo</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
-            <div class="dropdown-content">
-                <input type="file" id="actual-svg-importer" accept=".svg">
-                <button id="import-svg-button">Importar SVG</button>
-                <button id="export-svg">Exportar SVG</button>
-                <button id="clear-canvas">Limpiar Canvas</button>
+    <div class="app-container"> <!-- Nuevo contenedor principal -->
+        <aside class="svg-library-panel" id="svgLibraryPanel">
+            <button class="toggle-library-btn" id="toggleLibraryBtn">&lt;</button>
+            <h3>Librería SVG</h3>
+            <div class="library-items-container" id="libraryItemsContainer">
+                <!-- Los SVGs se cargarán aquí por JS -->
             </div>
-        </div>
+        </aside>
 
-        <button id="select-tool" class="tool-button" title="Seleccionar (V)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103z"/></svg>
-             Seleccionar
-        </button>
-
-        <div class="dropdown" data-dropdown-group="draw">
-            <button class="dropdown-button"><span>Dibujar</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
-            <div class="dropdown-content">
-                <button id="pencil-tool" class="tool-button" data-tool-name="Lápiz" title="Lápiz (P)">Lápiz</button>
-                <button id="rect-tool" class="tool-button" data-tool-name="Rect" title="Rectángulo (R)">Rectángulo</button>
-                <button id="circle-tool" class="tool-button" data-tool-name="Círculo" title="Círculo (C)">Círculo</button>
-                <button id="line-tool" class="tool-button" data-tool-name="Línea" title="Línea (L)">Línea</button>
-                <button id="polyline-tool" class="tool-button" data-tool-name="Polilínea" title="Polilínea">Polilínea</button>
-                <button id="spline-tool" class="tool-button" data-tool-name="Curva" title="Curva Bézier">Curva</button>
-                <button id="text-tool" class="tool-button" data-tool-name="Texto" title="Texto (T)">Texto</button>
-            </div>
-        </div>
-
-        <div class="dropdown" data-dropdown-group="style">
-            <button class="dropdown-button"><span>Estilo</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
-            <div class="dropdown-content">
-                <div class="dropdown-item-container">
-                    <label for="fill-color">Relleno:</label> <input type="color" id="fill-color" value="#3498db">
-                    <label for="stroke-color">Trazo:</label> <input type="color" id="stroke-color" value="#2c3e50">
-                    <label for="stroke-width">Grosor:</label> <input type="number" id="stroke-width" value="2" min="0" max="50">
+        <div class="main-content"> <!-- Contenedor para la toolbar y el canvas -->
+            <header class="top-toolbar">
+                <div class="dropdown" data-dropdown-group="file">
+                    <button class="dropdown-button"><span>Archivo</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
+                    <div class="dropdown-content">
+                        <input type="file" id="actual-svg-importer" accept=".svg">
+                        <button id="import-svg-button">Importar SVG</button>
+                        <button id="export-svg">Exportar SVG</button>
+                        <button id="clear-canvas">Limpiar Canvas</button>
+                    </div>
                 </div>
-            </div>
-        </div>
         
-        <div id="text-options-toolbar-group" class="hidden">
-            <select id="font-family"> <option value="Arial">Arial</option> <option value="Verdana">Verdana</option> <option value="Times New Roman">Times New Roman</option> <option value="Courier New">Courier New</option> <option value="Georgia">Georgia</option> <option value="Comic Sans MS">Comic Sans MS</option> </select>
-            <input type="number" id="font-size" value="24" min="1" title="Tamaño de Fuente">
-            <button id="font-bold" title="Negrita"><b>N</b></button> <button id="font-italic" title="Cursiva"><i>C</i></button>
-        </div>
-
-        <div class="dropdown" data-dropdown-group="order">
-            <button class="dropdown-button"><span>Orden</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
-            <div class="dropdown-content">
-                <button id="bring-forward" title="Adelantar (Ctrl+Up)">Adelantar</button>
-                <button id="send-backward" title="Retroceder (Ctrl+Down)">Retroceder</button>
-                <button id="bring-to-front" title="Traer al Frente (Ctrl+Shift+Up)">Al Frente</button>
-                <button id="send-to-back" title="Enviar al Fondo (Ctrl+Shift+Down)">Al Fondo</button>
-            </div>
-        </div>
-
-        <button id="group-objects" title="Agrupar (Ctrl+G)">Agrupar</button>
-        <button id="ungroup-objects" title="Desagrupar (Ctrl+Shift+G)">Desagrupar</button>
-        <button id="delete-selected" title="Borrar Selección (Supr/Del)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/> <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/> </svg> Borrar
-        </button>
+                <button id="select-tool" class="tool-button" title="Seleccionar (V)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103z"/></svg>
+                     Seleccionar
+                </button>
         
-        <div class="dropdown" data-dropdown-group="view">
-            <button class="dropdown-button"><span>Vista</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
-            <div class="dropdown-content">
-                <button id="zoom-in" title="Zoom In (Ctrl++)">Zoom In</button> <button id="zoom-out" title="Zoom Out (Ctrl+-)">Zoom Out</button>
-                <button id="reset-zoom" title="Reset Zoom (Ctrl+0)">Reset Zoom</button> <button id="fit-to-screen">Ajustar a Pantalla</button>
-            </div>
-        </div>
-
-        <div class="dropdown" data-dropdown-group="canvas_size">
-            <button class="dropdown-button"><span>Canvas</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
-            <div class="dropdown-content">
-                <div class="dropdown-item-container">
-                    <label for="canvas-width-input">Ancho (px):</label> <input type="number" id="canvas-width-input" value="800">
-                    <label for="canvas-height-input">Alto (px):</label> <input type="number" id="canvas-height-input" value="600">
-                    <button id="apply-canvas-size">Aplicar Tamaño</button>
+                <div class="dropdown" data-dropdown-group="draw">
+                    <button class="dropdown-button"><span>Dibujar</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
+                    <div class="dropdown-content">
+                        <button id="pencil-tool" class="tool-button" data-tool-name="Lápiz" title="Lápiz (P)">Lápiz</button>
+                        <button id="rect-tool" class="tool-button" data-tool-name="Rect" title="Rectángulo (R)">Rectángulo</button>
+                        <button id="circle-tool" class="tool-button" data-tool-name="Círculo" title="Círculo (C)">Círculo</button>
+                        <button id="line-tool" class="tool-button" data-tool-name="Línea" title="Línea (L)">Línea</button>
+                        <button id="polyline-tool" class="tool-button" data-tool-name="Polilínea" title="Polilínea">Polilínea</button>
+                        <button id="spline-tool" class="tool-button" data-tool-name="Curva" title="Curva Bézier">Curva</button>
+                        <button id="text-tool" class="tool-button" data-tool-name="Texto" title="Texto (T)">Texto</button>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </header>
+        
+                <div class="dropdown" data-dropdown-group="style">
+                    <button class="dropdown-button"><span>Estilo</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item-container">
+                            <label for="fill-color">Relleno:</label> <input type="color" id="fill-color" value="#3498db">
+                            <label for="stroke-color">Trazo:</label> <input type="color" id="stroke-color" value="#2c3e50">
+                            <label for="stroke-width">Grosor:</label> <input type="number" id="stroke-width" value="2" min="0" max="50">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="text-options-toolbar-group" class="hidden">
+                    <select id="font-family"> <option value="Arial">Arial</option> <option value="Verdana">Verdana</option> <option value="Times New Roman">Times New Roman</option> <option value="Courier New">Courier New</option> <option value="Georgia">Georgia</option> <option value="Comic Sans MS">Comic Sans MS</option> </select>
+                    <input type="number" id="font-size" value="24" min="1" title="Tamaño de Fuente">
+                    <button id="font-bold" title="Negrita"><b>N</b></button> <button id="font-italic" title="Cursiva"><i>C</i></button>
+                </div>
+        
+                <div class="dropdown" data-dropdown-group="order">
+                    <button class="dropdown-button"><span>Orden</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
+                    <div class="dropdown-content">
+                        <button id="bring-forward" title="Adelantar (Ctrl+Up)">Adelantar</button>
+                        <button id="send-backward" title="Retroceder (Ctrl+Down)">Retroceder</button>
+                        <button id="bring-to-front" title="Traer al Frente (Ctrl+Shift+Up)">Al Frente</button>
+                        <button id="send-to-back" title="Enviar al Fondo (Ctrl+Shift+Down)">Al Fondo</button>
+                    </div>
+                </div>
+        
+                <button id="group-objects" title="Agrupar (Ctrl+G)">Agrupar</button>
+                <button id="ungroup-objects" title="Desagrupar (Ctrl+Shift+G)">Desagrupar</button>
+                <button id="delete-selected" title="Borrar Selección (Supr/Del)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/> <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/> </svg> Borrar
+                </button>
+                
+                <div class="dropdown" data-dropdown-group="view">
+                    <button class="dropdown-button"><span>Vista</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
+                    <div class="dropdown-content">
+                        <button id="zoom-in" title="Zoom In (Ctrl++)">Zoom In</button> <button id="zoom-out" title="Zoom Out (Ctrl+-)">Zoom Out</button>
+                        <button id="reset-zoom" title="Reset Zoom (Ctrl+0)">Reset Zoom</button> <button id="fit-to-screen">Ajustar a Pantalla</button>
+                    </div>
+                </div>
+        
+                <div class="dropdown" data-dropdown-group="canvas_size">
+                    <button class="dropdown-button"><span>Canvas</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item-container">
+                            <label for="canvas-width-input">Ancho (px):</label> <input type="number" id="canvas-width-input" value="800">
+                            <label for="canvas-height-input">Alto (px):</label> <input type="number" id="canvas-height-input" value="600">
+                            <button id="apply-canvas-size">Aplicar Tamaño</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-    <main class="canvas-wrapper" id="canvas-wrapper">
-        <canvas id="editor-canvas"></canvas>
-    </main>
+            <main class="canvas-wrapper" id="canvas-wrapper">
+                <canvas id="editor-canvas"></canvas>
+            </main>
+        </div>
+    </div>
 
     <script type="module" src="js/main.js"></script>
 </body>

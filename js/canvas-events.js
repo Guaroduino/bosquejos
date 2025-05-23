@@ -3,15 +3,12 @@ import { handleShapeMouseDown, handleShapeMouseMove, handleShapeMouseUp } from '
 import { handlePolylineMouseDown, handlePolylineMouseMove, finishPolylineDrawing } from './tools/polyline-tool.js';
 import { handleSplineMouseDown, handleSplineMouseMove, finishSplineDrawing } from './tools/spline-tool.js';
 import { handleTextMouseDown } from './tools/text-tool.js';
-// No necesitamos importar closeAllDropdowns aquí si es llamado desde appState.setTool
 
 export function setupCanvasEventHandlers(appState) {
     const fabricCanvas = appState.fabricCanvas;
 
     fabricCanvas.on('mouse:down', (o) => {
         if (appState.isPanning) return;
-        // const pointer = fabricCanvas.getPointer(o.e); // No siempre necesario aquí
-
         switch (appState.currentTool) {
             case 'rect': case 'circle': case 'line':
                 handleShapeMouseDown(o, appState); break;
@@ -58,6 +55,63 @@ export function setupCanvasEventHandlers(appState) {
         opt.e.preventDefault(); opt.e.stopPropagation(); 
     });
 
+    // --- Drag & Drop de la Librería SVG ---
+    const canvasContainer = fabricCanvas.wrapperEl; 
+
+    canvasContainer.addEventListener('dragover', (event) => {
+        event.preventDefault(); 
+        event.dataTransfer.dropEffect = 'copy';
+        canvasContainer.classList.add('drag-over'); 
+    });
+
+    canvasContainer.addEventListener('dragleave', () => {
+        canvasContainer.classList.remove('drag-over');
+    });
+
+    canvasContainer.addEventListener('drop', (event) => {
+        event.preventDefault();
+        canvasContainer.classList.remove('drag-over'); 
+
+        const svgString = event.dataTransfer.getData('text/plain');
+        if (!svgString) return;
+
+        const fabricPointer = fabricCanvas.getPointer(event, true); 
+
+        fabric.loadSVGFromString(svgString, (objects, options) => {
+            if (!objects || objects.length === 0) return;
+            let objToAdd = (objects.length > 1) ? new fabric.Group(objects, options) : objects[0];
+            
+            // Intentar escalar el objeto para que tenga un tamaño inicial razonable si es muy grande
+            const maxDim = 150; // Tamaño máximo deseado para el objeto arrastrado
+            let scaleFactor = 1;
+            if (objToAdd.width > maxDim || objToAdd.height > maxDim) {
+                if (objToAdd.width > objToAdd.height) {
+                    scaleFactor = maxDim / objToAdd.width;
+                } else {
+                    scaleFactor = maxDim / objToAdd.height;
+                }
+            }
+            objToAdd.scale(scaleFactor);
+
+
+            objToAdd.set({
+                left: fabricPointer.x,
+                top: fabricPointer.y,
+                originX: 'center', // Centrar el objeto en el punto de drop
+                originY: 'center'
+            });
+            
+            if (objToAdd.type === 'group') objToAdd.setCoords();
+
+            fabricCanvas.add(objToAdd);
+            fabricCanvas.setActiveObject(objToAdd);
+            fabricCanvas.renderAll();
+            
+            if (appState.currentTool !== 'select') appState.setTool('select');
+        });
+    });
+
+
     document.addEventListener('keydown', (e) => {
         const activeEl = document.activeElement;
         const isInputFocused = activeEl && (['input', 'textarea'].includes(activeEl.tagName.toLowerCase()) || activeEl.isContentEditable);
@@ -67,16 +121,16 @@ export function setupCanvasEventHandlers(appState) {
             else if (appState.currentTool === 'spline' && (appState.isDrawingSplineSegment || appState.bezierPathData)) { finishSplineDrawing(appState); } 
             else if (fabricCanvas.getActiveObject()?.isEditing) { fabricCanvas.getActiveObject().exitEditing(); fabricCanvas.renderAll(); } 
             else if (isInputFocused) { activeEl.blur(); }
-            appState.closeAllDropdowns();
+            if (typeof appState.closeAllDropdowns === 'function') appState.closeAllDropdowns();
         }
         if (isInputFocused && e.key !== 'Escape') { if (e.key === 'Enter' && activeEl.tagName !== 'TEXTAREA') activeEl.blur(); return; }
         if (e.key === ' ' && !isInputFocused) { e.preventDefault(); if (!appState.isPanning) { appState.isPanning = true; fabricCanvas.defaultCursor = 'grab'; fabricCanvas.selection = false; fabricCanvas.renderAll(); } }
         
         if (e.key === 'Delete' || e.key === 'Backspace') { 
-            if (!fabricCanvas.getActiveObject()?.isEditing) { e.preventDefault(); appState.deleteSelectedObjects(); } 
+            if (!fabricCanvas.getActiveObject()?.isEditing) { e.preventDefault(); if (typeof appState.deleteSelectedObjects === 'function') appState.deleteSelectedObjects(); } 
         }
         if (e.ctrlKey || e.metaKey) { 
-            const ao = fabricCanvas.getActiveObject(); // getActiveObject de fabric, no de appState
+            const ao = fabricCanvas.getActiveObject(); 
             if (ao) {
                 if (e.key === 'ArrowUp') { e.preventDefault(); if (e.shiftKey) fabricCanvas.bringToFront(ao); else fabricCanvas.bringForward(ao); fabricCanvas.renderAll(); } 
                 else if (e.key === 'ArrowDown') { e.preventDefault(); if (e.shiftKey) fabricCanvas.sendToBack(ao); else fabricCanvas.sendBackwards(ao); fabricCanvas.renderAll(); }

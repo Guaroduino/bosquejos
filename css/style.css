@@ -16,6 +16,118 @@
 }
 * { box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-color); color: var(--text-color); overflow: hidden; }
+
+/* Contenedor principal de la aplicación */
+.app-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Panel de la Librería SVG */
+.svg-library-panel {
+    width: 250px; 
+    min-width: 200px; 
+    background-color: var(--toolbar-bg); 
+    border-right: 1px solid var(--border-color);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease, transform 0.3s ease; /* Añadir transform para suavizar el colapso */
+    position: relative; 
+    z-index: 90; 
+}
+
+.svg-library-panel.collapsed {
+    width: 0; /* Colapsar completamente */
+    min-width: 0;
+    padding: 10px 0; 
+    overflow: hidden; /* Ocultar contenido cuando está colapsado */
+    border-right: none; /* Ocultar borde cuando está colapsado */
+    transform: translateX(-100%); /* Mover fuera de la pantalla */
+}
+.svg-library-panel.collapsed + .main-content .toggle-library-btn { /* Estilo para el botón cuando el panel está colapsado */
+    left: 5px; /* Posicionar cerca del borde */
+    transform: translateY(-50%) rotate(180deg); /* Rotar la flecha */
+}
+
+
+.toggle-library-btn {
+    position: fixed; /* Para que se mantenga visible incluso si el panel se colapsa */
+    top: 50%;
+    left: 235px; /* (ancho del panel - mitad del botón) */
+    transform: translateY(-50%);
+    width: 30px;
+    height: 60px; /* Más alto para mejor área de clic */
+    background-color: var(--primary-accent);
+    color: white;
+    border: none;
+    border-top-right-radius: 8px;  /* Redondear esquinas */
+    border-bottom-right-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    z-index: 95;
+    transition: transform 0.3s ease, left 0.3s ease;
+}
+.toggle-library-btn:hover {
+    background-color: #0056b3;
+}
+
+
+.svg-library-panel h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: var(--primary-accent);
+    text-align: center;
+    white-space: nowrap; /* Evitar que el título se rompa al colapsar */
+}
+
+.library-items-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
+    gap: 10px;
+}
+
+.library-item {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px;
+    cursor: grab; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s;
+    background-color: var(--input-bg);
+    aspect-ratio: 1 / 1; /* Para mantenerlos cuadrados */
+}
+.library-item:hover {
+    background-color: var(--button-hover-bg);
+    border-color: var(--primary-accent);
+}
+.library-item svg {
+    width: 90%; /* Ajustar para que no toque los bordes */
+    height: 90%;
+    max-height: 60px; 
+    pointer-events: none; 
+}
+
+/* Contenedor para el contenido principal (toolbar y canvas) */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+    transition: margin-left 0.3s ease; /* Para ajustar cuando la librería se colapsa */
+}
+
+/* Estilos de la Toolbar Superior (como estaban) */
 .top-toolbar { background-color: var(--toolbar-bg); padding: 8px 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; flex-wrap: wrap; gap: 5px; z-index: 100; border-bottom: 1px solid var(--border-color); position: relative; }
 .dropdown { position: relative; display: inline-block; }
 .dropdown-button { background-color: var(--input-bg); color: var(--primary-accent); padding: 6px 12px; font-size: 0.9em; border: 1px solid var(--primary-accent); border-radius: 4px; cursor: pointer; height: 32px; display: flex; align-items: center; gap: 5px; min-width: 100px; justify-content: space-between;}
@@ -48,3 +160,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 #text-options-toolbar-group button:hover { background-color: var(--primary-accent); color: white; }
 .canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; background-color: var(--bg-color); overflow: auto; position: relative; }
 #editor-canvas { background-color: var(--canvas-bg); box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+
+/* Clase para feedback de drag over en el canvas */
+.canvas-wrapper.drag-over {
+    border: 2px dashed var(--primary-accent);
+    background-color: #eef7ff; /* Un azul muy claro */
+}

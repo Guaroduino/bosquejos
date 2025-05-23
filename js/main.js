@@ -9,6 +9,14 @@ import { setupViewControls, resetZoomAndPanView } from './view-manager.js';
 document.addEventListener('DOMContentLoaded', () => {
     const fabricCanvas = initializeFabricCanvas('editor-canvas');
 
+    // Captura el botón central del mouse y previene el autoscroll del navegador
+    const htmlCanvas = document.getElementById('editor-canvas');
+    htmlCanvas.addEventListener('mousedown', (e) => {
+        if (e.button === 1) {
+            e.preventDefault();
+        }
+    });
+
     const appState = {
         currentTool: 'select',
         isDrawing: false, 

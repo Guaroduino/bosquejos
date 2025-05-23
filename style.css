@@ -1,59 +1,51 @@
 body {
     font-family: sans-serif;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #f0f0f0;
-    /* touch-action: none; Let Fabric.js handle touch interactions on its canvas */
-    overflow: hidden; /* Prevents scrollbars */
+    background: #f4f4f4;
 }
 
 .toolbar {
-    background-color: #333;
+    background: #333;
     padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
     display: flex;
     gap: 10px;
     align-items: center;
-    flex-wrap: wrap; /* Allow toolbar items to wrap on small screens */
-    z-index: 10; /* Ensure toolbar is above canvas container if they overlap */
+    border-radius: 6px;
+    margin: 16px auto 0 auto;
+    width: fit-content;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.tool-button, #clear-canvas, #save-svg, #load-svg-button {
-    padding: 8px 15px;
+.toolbar button {
+    background: #555;
+    color: #fff;
     border: none;
-    background-color: #555;
-    color: white;
-    cursor: pointer;
     border-radius: 3px;
-    transition: background-color 0.2s;
-}
-
-.tool-button:hover, #clear-canvas:hover, #save-svg:hover, #load-svg-button:hover {
-    background-color: #777;
-}
-
-.tool-button.active {
-    background-color: #007bff;
-}
-
-#color-picker {
-    border: 1px solid #ccc;
-    padding: 2px;
-    width: 40px;
-    height: 30px;
+    padding: 8px 14px;
     cursor: pointer;
+    font-size: 1em;
+    transition: background 0.2s;
+}
+.toolbar button:hover, .toolbar button:focus {
+    background: #007bff;
 }
 
-#stroke-width-picker {
-    width: 50px;
-    padding: 5px;
-    border: 1px solid #ccc;
+.toolbar input[type="color"],
+.toolbar input[type="number"] {
+    height: 32px;
     border-radius: 3px;
-    height: 30px; /* Match color picker height */
-    box-sizing: border-box;
+    border: 1px solid #ccc;
+    padding: 0 6px;
+    font-size: 1em;
+}
+
+#drawing-canvas {
+    display: block;
+    margin: 24px auto;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 /* Canvas styling is still useful for border and background if Fabric doesn't set it */

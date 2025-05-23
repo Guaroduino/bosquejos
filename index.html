@@ -3,21 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor SVG Modular con Librería</title>
+    <title>Editor SVG Modular</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="app-container"> <!-- Nuevo contenedor principal -->
-        <aside class="svg-library-panel" id="svgLibraryPanel">
-            <button class="toggle-library-btn" id="toggleLibraryBtn">&lt;</button>
-            <h3>Librería SVG</h3>
-            <div class="library-items-container" id="libraryItemsContainer">
-                <!-- Los SVGs se cargarán aquí por JS -->
-            </div>
-        </aside>
-
-        <div class="main-content"> <!-- Contenedor para la toolbar y el canvas -->
+    <div class="app-container">
+        <div class="main-content">
             <header class="top-toolbar">
                 <div class="dropdown" data-dropdown-group="file">
                     <button class="dropdown-button"><span>Archivo</span> <span class="active-tool-indicator"></span> <svg class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg></button>

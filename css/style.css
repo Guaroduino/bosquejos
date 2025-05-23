@@ -22,36 +22,37 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     display: flex;
     height: 100vh;
     overflow: hidden;
-    position: relative; /* Para que el botón de toggle se posicione relativo a este */
+    position: relative;
 }
 
 /* Panel de la Librería SVG */
 .svg-library-panel {
     width: 250px; 
     min-width: 250px;
-    height: 75vh; /* Altura fija al 75% del viewport */
-    margin-top: 20px; /* Espacio arriba */
+    height: 75vh;
     background-color: var(--toolbar-bg); 
     border-right: 1px solid var(--border-color);
-    border-radius: 0 8px 8px 0; /* Bordes redondeados en el lado derecho */
+    border-radius: 0 8px 8px 0;
     padding: 10px;
     display: flex;
     flex-direction: column;
     transition: transform 0.3s ease-in-out;
-    position: relative;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 90;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
 
 .svg-library-panel.collapsed {
-    transform: translateX(-100%);
+    transform: translate(-100%, -50%);
 }
 
 /* Botón para mostrar/ocultar la librería */
 .toggle-library-btn {
     position: fixed;
     top: 50%;
-    left: 5px;
+    left: 0;
     transform: translateY(-50%);
     width: 30px;
     height: 60px;
@@ -72,57 +73,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 
 .toggle-library-btn:hover {
     background-color: #0056b3;
-    width: 35px; /* Ligeramente más ancho al hover */
+    width: 35px;
 }
 
 /* Ajustar el botón cuando el panel está visible */
-body:has(.svg-library-panel:not(.collapsed)) .toggle-library-btn {
-    left: 235px;
-}
-
-/* Si el panel está colapsado, el botón se queda a la izquierda */
-body:has(.svg-library-panel.collapsed) .toggle-library-btn {
-    left: 5px;
-}
-
-.svg-library-panel h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.1em;
-    color: var(--primary-accent);
-    text-align: center;
-    white-space: nowrap; 
-}
-
-.library-items-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
-    gap: 10px;
-}
-
-.library-item {
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 8px;
-    cursor: grab; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.2s;
-    background-color: var(--input-bg);
-    aspect-ratio: 1 / 1; 
-}
-.library-item:hover {
-    background-color: var(--button-hover-bg);
-    border-color: var(--primary-accent);
-}
-.library-item svg {
-    width: 90%; 
-    height: 90%;
-    max-height: 60px; 
-    pointer-events: none; 
+.svg-library-panel:not(.collapsed) ~ .toggle-library-btn {
+    left: 250px;
 }
 
 /* Contenedor para el contenido principal (toolbar y canvas) */
@@ -131,11 +87,31 @@ body:has(.svg-library-panel.collapsed) .toggle-library-btn {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    margin-left: 0; /* Aseguramos que no haya margen */
+    margin-left: 250px; /* Espacio para el panel lateral */
+    transition: margin-left 0.3s ease-in-out;
 }
 
-/* Estilos de la Toolbar Superior (como estaban) */
-.top-toolbar { background-color: var(--toolbar-bg); padding: 8px 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; flex-wrap: wrap; gap: 5px; z-index: 100; border-bottom: 1px solid var(--border-color); position: relative; }
+/* Cuando el panel está colapsado, ajustar el margen */
+.svg-library-panel.collapsed ~ .main-content {
+    margin-left: 0;
+}
+
+/* Estilos de la Toolbar Superior */
+.top-toolbar { 
+    background-color: var(--toolbar-bg); 
+    padding: 8px 15px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+    display: flex; 
+    align-items: center; 
+    flex-wrap: wrap; 
+    gap: 5px; 
+    z-index: 100; 
+    border-bottom: 1px solid var(--border-color); 
+    position: relative;
+    width: 100%; /* Asegurar que ocupe todo el ancho */
+    min-width: 100%; /* Forzar ancho mínimo */
+}
+
 .dropdown { position: relative; display: inline-block; }
 .dropdown-button { background-color: var(--input-bg); color: var(--primary-accent); padding: 6px 12px; font-size: 0.9em; border: 1px solid var(--primary-accent); border-radius: 4px; cursor: pointer; height: 32px; display: flex; align-items: center; gap: 5px; min-width: 100px; justify-content: space-between;}
 .dropdown-button.active-parent { background-color: var(--primary-accent); color: white; } 

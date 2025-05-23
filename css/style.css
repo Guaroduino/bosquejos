@@ -1,0 +1,50 @@
+:root {
+    --bg-color: #f4f6f8; 
+    --toolbar-bg: #ffffff;
+    --canvas-bg: #ffffff;
+    --text-color: #333333;
+    --primary-accent: #007bff; 
+    --secondary-accent: #6c757d; 
+    --border-color: #dee2e6;
+    --button-hover-bg: #e9ecef;
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --dropdown-bg: #ffffff;
+    --dropdown-hover-bg: #f8f9fa;
+    --danger-color: #dc3545; 
+    --danger-hover-bg: #c82333;
+}
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-color); color: var(--text-color); overflow: hidden; }
+.top-toolbar { background-color: var(--toolbar-bg); padding: 8px 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; flex-wrap: wrap; gap: 5px; z-index: 100; border-bottom: 1px solid var(--border-color); position: relative; }
+.dropdown { position: relative; display: inline-block; }
+.dropdown-button { background-color: var(--input-bg); color: var(--primary-accent); padding: 6px 12px; font-size: 0.9em; border: 1px solid var(--primary-accent); border-radius: 4px; cursor: pointer; height: 32px; display: flex; align-items: center; gap: 5px; min-width: 100px; justify-content: space-between;}
+.dropdown-button.active-parent { background-color: var(--primary-accent); color: white; } 
+.dropdown-button:hover { background-color: var(--primary-accent); color: white; }
+.dropdown-button svg.chevron { width: 1em; height: 1em; margin-left: auto; }
+.dropdown-button .active-tool-indicator { font-size: 0.8em; color: var(--secondary-accent); max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dropdown-button.active-parent .active-tool-indicator { color: white; }
+
+.dropdown-content { display: none; position: absolute; background-color: var(--dropdown-bg); min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 101; border-radius: 4px; padding: 5px 0; border: 1px solid var(--border-color); }
+.dropdown-content.show { display: block; }
+.dropdown-item-container { padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
+.dropdown-item-container label { font-size: 0.85em; color: var(--secondary-accent); margin-bottom: 2px; }
+.dropdown-item-container input[type="color"], .dropdown-item-container input[type="number"] { width: 100%; padding: 5px; border: 1px solid var(--input-border); border-radius: 3px; }
+.dropdown-item-container input[type="color"] { height: 30px; }
+.dropdown-content button, .dropdown-content a { color: var(--text-color); padding: 8px 12px; text-decoration: none; display: block; background: none; border: none; width: 100%; text-align: left; font-size: 0.9em; cursor: pointer; }
+.dropdown-content button:hover, .dropdown-content a:hover { background-color: var(--dropdown-hover-bg); }
+.dropdown-content button.tool-button.active { background-color: var(--primary-accent); color: white; font-weight: bold; }
+#actual-svg-importer { display: none; }
+.top-toolbar > button, .top-toolbar > .direct-button { padding: 6px 10px; font-size: 0.85em; height: 32px; border: 1px solid var(--input-border); border-radius: 4px; background-color: var(--input-bg); color: var(--primary-accent); cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.top-toolbar > button:hover, .top-toolbar > .direct-button:hover { background-color: var(--button-hover-bg); }
+.top-toolbar > button.tool-button.active { background-color: var(--primary-accent); color: white; }
+#delete-selected { color: var(--danger-color); border-color: var(--danger-color); }
+#delete-selected:hover { background-color: var(--danger-color); color: white; }
+#text-options-toolbar-group { display: flex; align-items: center; gap: 8px; }
+#text-options-toolbar-group.hidden { display: none; }
+#text-options-toolbar-group label { font-size: 0.85em; color: var(--secondary-accent); }
+#text-options-toolbar-group select, #text-options-toolbar-group input[type="number"], #text-options-toolbar-group button { padding: 6px 8px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 0.85em; background-color: var(--input-bg); height: 32px; }
+#text-options-toolbar-group button { color: var(--primary-accent); border-color: var(--primary-accent); }
+#text-options-toolbar-group button:hover { background-color: var(--primary-accent); color: white; }
+.canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; background-color: var(--bg-color); overflow: auto; position: relative; }
+#editor-canvas { background-color: var(--canvas-bg); box-shadow: 0 0 15px rgba(0,0,0,0.1); }

@@ -254,7 +254,9 @@ class SVGManager {
     }
 
     prepareSVGGroup(group) {
-        group.getObjects().forEach(obj => {
+        // If group is a group, get its objects, otherwise treat it as a single object
+        const objects = (typeof group.getObjects === 'function') ? group.getObjects() : [group];
+        objects.forEach(obj => {
             if (obj.type === 'path' && !obj.stroke) {
                 obj.set({ stroke: this.toolManager.currentColor, strokeWidth: this.toolManager.currentStrokeWidth });
             }

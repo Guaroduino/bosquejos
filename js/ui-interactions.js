@@ -171,17 +171,32 @@ export function updateActiveToolIndicatorInUI(toolId) {
 export function setActiveToolState(tool, appState) {
     const fabricCanvas = appState.fabricCanvas;
 
+    // 1. Botón activo cambia de color
+    document.querySelectorAll('.tool-button').forEach(btn => {
+        btn.classList.toggle('active', btn.id === tool + '-tool');
+    });
+
+    // 2. Mostrar nombre de herramienta activa en el botón 'Dibujar'
+    const drawTools = ['pencil', 'rect', 'circle', 'line', 'polyline', 'spline', 'text'];
+    const drawLabel = document.getElementById('active-draw-tool-label');
+    if (drawLabel) {
+        if (drawTools.includes(tool)) {
+            // Obtener el nombre legible desde el botón
+            const btn = document.getElementById(tool + '-tool');
+            drawLabel.textContent = btn ? `: ${btn.getAttribute('data-tool-name')}` : '';
+        } else {
+            drawLabel.textContent = '';
+        }
+    }
+
     fabricCanvas.isDrawingMode = (tool === 'pencil');
     updateActiveToolIndicatorInUI(tool + '-tool'); 
-    
     const textOptionsPanel = document.getElementById('text-options-toolbar-group');
     const activeObject = fabricCanvas.getActiveObject();
     textOptionsPanel.classList.toggle('hidden', !(tool === 'text' || (activeObject && activeObject.type === 'i-text')));
-
     fabricCanvas.selection = (tool === 'select');
     fabricCanvas.defaultCursor = (tool === 'select') ? 'default' : 'crosshair';
     if (tool === 'polyline' || tool === 'spline') { fabricCanvas.defaultCursor = 'crosshair'; fabricCanvas.selection = false; }
-    
     if (tool === 'pencil') { 
         fabricCanvas.freeDrawingBrush.color = document.getElementById('stroke-color').value;
         fabricCanvas.freeDrawingBrush.width = parseInt(document.getElementById('stroke-width').value, 10);

@@ -2,18 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Simple CAD Web App with Fabric.js</title>
     <link rel="stylesheet" href="style.css">
     <!-- Add Fabric.js library -->
     <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dxf@5.2.0/dist/dxf.js"></script>
 </head>
 <body>
     <div class="toolbar">
+        <button id="tool-select" class="tool-button" data-tool="select">Select</button>
         <button id="tool-line" class="tool-button active" data-tool="line">Line</button>
         <button id="tool-rect" class="tool-button" data-tool="rect">Rectangle</button>
         <button id="tool-circle" class="tool-button" data-tool="circle">Circle</button>

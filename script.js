@@ -215,6 +215,7 @@ class SVGManager {
             if (this.isPlacingSvgMode) {
                 this.setPlacingSvgMode(false);
             }
+            loadSvgInput.value = ''; // Reset the input value
             loadSvgInput.click();
         });
 

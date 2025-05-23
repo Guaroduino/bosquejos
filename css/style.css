@@ -25,75 +25,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     position: relative;
 }
 
-/* Panel de la Librería SVG */
-.svg-library-panel {
-    width: 250px; 
-    min-width: 250px;
-    height: 75vh;
-    background-color: var(--toolbar-bg); 
-    border-right: 1px solid var(--border-color);
-    border-radius: 0 8px 8px 0;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease-in-out;
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 90;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-}
-
-.svg-library-panel.collapsed {
-    transform: translate(-100%, -50%);
-}
-
-/* Botón para mostrar/ocultar la librería */
-.toggle-library-btn {
-    position: fixed;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    width: 30px;
-    height: 60px;
-    background-color: var(--primary-accent);
-    color: white;
-    border: none;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2em;
-    font-weight: bold;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    z-index: 105;
-    transition: all 0.3s ease-in-out;
-}
-
-.toggle-library-btn:hover {
-    background-color: #0056b3;
-    width: 35px;
-}
-
-/* Ajustar el botón cuando el panel está visible */
-.svg-library-panel:not(.collapsed) ~ .toggle-library-btn {
-    left: 250px;
-}
-
 /* Contenedor para el contenido principal (toolbar y canvas) */
 .main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    margin-left: 250px; /* Espacio para el panel lateral */
-    transition: margin-left 0.3s ease-in-out;
-}
-
-/* Cuando el panel está colapsado, ajustar el margen */
-.svg-library-panel.collapsed ~ .main-content {
-    margin-left: 0;
+    width: 100%;
 }
 
 /* Estilos de la Toolbar Superior */
@@ -108,8 +46,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     z-index: 100; 
     border-bottom: 1px solid var(--border-color); 
     position: relative;
-    width: 100%; /* Asegurar que ocupe todo el ancho */
-    min-width: 100%; /* Forzar ancho mínimo */
+    width: 100%;
 }
 
 .dropdown { position: relative; display: inline-block; }

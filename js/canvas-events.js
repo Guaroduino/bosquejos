@@ -4,9 +4,36 @@ import { handlePolylineMouseDown, handlePolylineMouseMove, finishPolylineDrawing
 import { handleSplineMouseDown, handleSplineMouseMove, finishSplineDrawing } from './tools/spline-tool.js';
 import { handleTextMouseDown } from './tools/text-tool.js';
 
+// Función auxiliar para determinar si la herramienta actual es de dibujo
+function isDrawingTool(tool) {
+    return ['rect', 'circle', 'line', 'polyline', 'spline', 'text', 'pencil'].includes(tool);
+}
+
 export function setupCanvasEventHandlers(appState) {
     const fabricCanvas = appState.fabricCanvas;
     let lastClientX, lastClientY; // Para el paneo con botón central
+
+    // Función para actualizar la configuración de selección según la herramienta
+    function updateSelectionSettings() {
+        const isDrawing = isDrawingTool(appState.currentTool);
+        fabricCanvas.selection = !isDrawing;
+        fabricCanvas.defaultCursor = isDrawing ? 'crosshair' : 'default';
+        
+        // Desactivar la selección de objetos existentes si estamos en modo dibujo
+        if (isDrawing) {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject) {
+                fabricCanvas.discardActiveObject();
+                fabricCanvas.requestRenderAll();
+            }
+        }
+    }
+
+    // Actualizar configuración cuando cambia la herramienta
+    appState.setTool = (tool) => {
+        appState.currentTool = tool;
+        updateSelectionSettings();
+    };
 
     fabricCanvas.on('mouse:down', (o) => {
         const event = o.e;
@@ -24,6 +51,11 @@ export function setupCanvasEventHandlers(appState) {
         }
 
         if (appState.isPanningWithSpacebar) return; // Si ya estamos paneando con barra espaciadora
+
+        // Si estamos en modo dibujo, no permitir selección
+        if (isDrawingTool(appState.currentTool)) {
+            fabricCanvas.selection = false;
+        }
 
         switch (appState.currentTool) {
             case 'rect': case 'circle': case 'line':
@@ -74,15 +106,7 @@ export function setupCanvasEventHandlers(appState) {
         // --- Paneo con Botón Central (Rueda) ---
         if (event.button === 1 && appState.isMiddleMouseButtonPanning) {
             appState.isMiddleMouseButtonPanning = false;
-            // Restaurar cursor y selección según la herramienta activa
-            fabricCanvas.defaultCursor = (appState.currentTool === 'select') ? 'default' : 'crosshair';
-            if (appState.currentTool === 'polyline' || appState.currentTool === 'spline') {
-                fabricCanvas.defaultCursor = 'crosshair';
-                fabricCanvas.selection = false;
-            } else {
-                fabricCanvas.selection = (appState.currentTool === 'select');
-            }
-            fabricCanvas.renderAll();
+            updateSelectionSettings();
             return; // No procesar otras lógicas de mouse:up
         }
         
@@ -146,14 +170,10 @@ export function setupCanvasEventHandlers(appState) {
         // --- Paneo con Barra Espaciadora (Fin) ---
         if (e.key===' ' && appState.isPanningWithSpacebar) { 
             appState.isPanningWithSpacebar=false; 
-            fabricCanvas.defaultCursor=(appState.currentTool==='select')?'default':'crosshair'; 
-            if (appState.currentTool === 'polyline' || appState.currentTool === 'spline') {
-                fabricCanvas.defaultCursor = 'crosshair';
-                fabricCanvas.selection = false;
-            } else {
-                fabricCanvas.selection = (appState.currentTool === 'select');
-            }
-            fabricCanvas.renderAll(); 
+            updateSelectionSettings(); 
         } 
     });
+
+    // Inicializar la configuración de selección
+    updateSelectionSettings();
 }

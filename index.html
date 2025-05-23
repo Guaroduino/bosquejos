@@ -2,28 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Fabric.js Drawing App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Drawing App</title>
     <link rel="stylesheet" href="style.css">
     <!-- Fabric.js -->
-    <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
-    <!-- Perfect Freehand (exposes window.getStroke) -->
-    <script src="https://cdn.jsdelivr.net/npm/perfect-freehand@1.0.0/dist/perfect-freehand.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <!-- perfect-freehand -->
+    <script src="https://unpkg.com/perfect-freehand@1.2.0/dist/perfect-freehand.js"></script>
 </head>
 <body>
     <div class="toolbar">
-        <button id="tool-select">Select</button>
-        <button id="tool-line">Line</button>
-        <button id="tool-rect">Rect</button>
-        <button id="tool-circle">Circle</button>
-        <button id="tool-brush">Brush</button>
-        <input type="color" id="color-picker" value="#000000">
-        <input type="number" id="stroke-width-picker" value="2" min="1" max="50">
-        <button id="clear-canvas">Clear</button>
-        <button id="save-svg">Save SVG</button>
-        <input type="file" id="load-svg-input" accept=".svg" style="display:none;">
-        <button id="load-svg-button">Load SVG</button>
+        <button id="pencilBtn" class="active">Pencil</button>
+        <button id="eraserBtn">Eraser</button>
+        <label for="colorPicker">Color:</label>
+        <input type="color" id="colorPicker" value="#000000">
+        <label for="strokeWidth">Width:</label>
+        <input type="range" id="strokeWidth" min="1" max="50" value="5">
+        <span id="strokeWidthValue">5</span>
+        <button id="clearBtn">Clear</button>
+        <button id="saveBtn">Save SVG</button>
     </div>
-    <canvas id="drawing-canvas"></canvas>
+    <canvas id="drawingCanvas"></canvas>
+
     <script src="script.js"></script>
 </body>
 </html>

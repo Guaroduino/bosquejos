@@ -1,180 +1,151 @@
-// --- Minimal, Modular Fabric.js Drawing App ---
-
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Setup ---
-    const canvas = new fabric.Canvas('drawing-canvas', {
-        isDrawingMode: false,
-        selection: true,
-        backgroundColor: '#fff',
+    const canvasElement = document.getElementById('drawingCanvas');
+    const pencilBtn = document.getElementById('pencilBtn');
+    const eraserBtn = document.getElementById('eraserBtn');
+    const colorPicker = document.getElementById('colorPicker');
+    const strokeWidthSlider = document.getElementById('strokeWidth');
+    const strokeWidthValue = document.getElementById('strokeWidthValue');
+    const clearBtn = document.getElementById('clearBtn');
+    const saveBtn = document.getElementById('saveBtn');
+
+    // Initialize Fabric.js canvas
+    const canvas = new fabric.Canvas(canvasElement, {
+        width: window.innerWidth * 0.9,
+        height: window.innerHeight * 0.75,
+        isDrawingMode: false, // We'll handle drawing manually
+        backgroundColor: 'white'
     });
 
-    // --- Make canvas fill the available screen, but cap size for performance ---
-    function resizeCanvasToFullScreen() {
-        let width = Math.min(window.innerWidth, 1200);
-        let height = Math.min(window.innerHeight, 900);
-        canvas.setWidth(width);
-        canvas.setHeight(height);
-        canvas.calcOffset();
-        canvas.renderAll();
-    }
-    window.addEventListener('resize', resizeCanvasToFullScreen);
-    resizeCanvasToFullScreen();
+    let currentTool = 'pencil'; // 'pencil' or 'eraser'
+    let currentColor = colorPicker.value;
+    let currentStrokeWidth = parseInt(strokeWidthSlider.value);
+    let isDrawing = false;
+    let currentPoints = []; // To store points for perfect-freehand
 
-    // --- State ---
-    let currentTool = 'select';
-    let currentColor = '#000000';
-    let currentStrokeWidth = 2;
-    let drawingShape = null;
-    let brushPoints = [];
-    let brushMoveCounter = 0;
+    // --- Perfect-Freehand Stroke Options ---
+    // (getStroke is globally available from the perfect-freehand script)
+    const pfOptions = {
+        size: currentStrokeWidth,
+        thinning: 0.6, // How much the line thins when pressure is light
+        smoothing: 0.5, // How much to smooth the stroke
+        streamline: 0.5, // How much to streamline the stroke
+        easing: (t) => t, // Linear easing
+        start: {
+            taper: 0,
+            cap: true
+        },
+        end: {
+            taper: 0,
+            cap: true
+        },
+    };
 
-    // --- Toolbar Elements ---
-    const colorPicker = document.getElementById('color-picker');
-    const strokeWidthPicker = document.getElementById('stroke-width-picker');
-    const loadSvgInput = document.getElementById('load-svg-input');
-    const loadSvgButton = document.getElementById('load-svg-button');
-
-    // --- Tool Switching ---
-    function activateTool(tool) {
-        currentTool = tool;
-        if (tool === 'select') {
-            canvas.isDrawingMode = false;
-            canvas.selection = true;
-            canvas.defaultCursor = 'default';
-            canvas.getObjects().forEach(obj => obj.set({ selectable: true, evented: true }));
-        } else {
-            canvas.isDrawingMode = false;
-            canvas.selection = false;
-            canvas.defaultCursor = 'crosshair';
-            canvas.getObjects().forEach(obj => obj.set({ selectable: false, evented: false }));
-        }
-        canvas.discardActiveObject().renderAll();
-    }
-    document.getElementById('tool-select').onclick = () => activateTool('select');
-    document.getElementById('tool-line').onclick = () => activateTool('line');
-    document.getElementById('tool-rect').onclick = () => activateTool('rect');
-    document.getElementById('tool-circle').onclick = () => activateTool('circle');
-    document.getElementById('tool-brush').onclick = () => activateTool('brush');
-    activateTool('select');
-
-    // --- Color and Stroke Width ---
-    colorPicker.oninput = e => currentColor = e.target.value;
-    strokeWidthPicker.oninput = e => currentStrokeWidth = parseInt(e.target.value, 10) || 1;
-
-    // --- Drawing Logic ---
-    canvas.on('mouse:down', o => {
-        if (currentTool === 'select') return;
-        const pointer = canvas.getPointer(o.e);
-        const common = { stroke: currentColor, strokeWidth: currentStrokeWidth, fill: 'transparent', selectable: false, evented: false };
-        if (currentTool === 'line') {
-            drawingShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], common);
-        } else if (currentTool === 'rect') {
-            drawingShape = new fabric.Rect({ left: pointer.x, top: pointer.y, width: 0, height: 0, ...common });
-        } else if (currentTool === 'circle') {
-            drawingShape = new fabric.Circle({ left: pointer.x, top: pointer.y, radius: 0, originX: 'center', originY: 'center', ...common });
-        }
-        if (drawingShape) canvas.add(drawingShape);
+    // --- Event Listeners for Toolbar ---
+    pencilBtn.addEventListener('click', () => {
+        currentTool = 'pencil';
+        pencilBtn.classList.add('active');
+        eraserBtn.classList.remove('active');
     });
 
-    canvas.on('mouse:move', o => {
-        if (!drawingShape) return;
-        const pointer = canvas.getPointer(o.e);
-        if (currentTool === 'line') {
-            drawingShape.set({ x2: pointer.x, y2: pointer.y });
-        } else if (currentTool === 'rect') {
-            const width = pointer.x - drawingShape.left;
-            const height = pointer.y - drawingShape.top;
-            drawingShape.set({ width: Math.abs(width), height: Math.abs(height), left: width > 0 ? drawingShape.left : pointer.x, top: height > 0 ? drawingShape.top : pointer.y });
-        } else if (currentTool === 'circle') {
-            const radius = Math.sqrt(Math.pow(pointer.x - drawingShape.left, 2) + Math.pow(pointer.y - drawingShape.top, 2));
-            drawingShape.set({ radius });
-        }
-        canvas.renderAll();
+    eraserBtn.addEventListener('click', () => {
+        currentTool = 'eraser';
+        eraserBtn.classList.add('active');
+        pencilBtn.classList.remove('active');
     });
 
-    canvas.on('mouse:up', () => {
-        if (drawingShape) {
-            drawingShape.set({ selectable: true, evented: true });
-            drawingShape = null;
-        }
+    colorPicker.addEventListener('input', (e) => {
+        currentColor = e.target.value;
     });
 
-    // --- Brush Tool (Perfect Freehand) ---
-    function drawBrushStroke() {
-        if (brushPoints.length < 2) return;
-        if (drawingShape) canvas.remove(drawingShape);
-        const stroke = window.getStroke(brushPoints, { size: currentStrokeWidth * 8, thinning: 0.5, smoothing: 0.5, streamline: 0.5 });
-        const pathData = getSvgPathFromStroke(stroke);
-        drawingShape = new fabric.Path(pathData, { fill: currentColor, selectable: false, evented: false });
-        canvas.add(drawingShape);
-        canvas.renderAll();
-    }
-    function finalizeBrushStroke() {
-        if (drawingShape) {
-            drawingShape.set({ selectable: true, evented: true });
-            drawingShape = null;
-        }
-        brushPoints = [];
-    }
-    function getSvgPathFromStroke(points) {
-        if (!points.length) return '';
-        let d = '';
-        for (let i = 0; i < points.length; i++) {
-            const [x, y] = points[i];
-            d += (i === 0 ? 'M' : 'L') + x + ' ' + y + ' ';
-        }
-        d += 'Z';
-        return d;
-    }
+    strokeWidthSlider.addEventListener('input', (e) => {
+        currentStrokeWidth = parseInt(e.target.value);
+        strokeWidthValue.textContent = currentStrokeWidth;
+        pfOptions.size = currentStrokeWidth; // Update perfect-freehand option
+    });
 
-    // --- SVG Import/Export ---
-    document.getElementById('save-svg').onclick = () => {
-        const svgData = canvas.toSVG({ suppressPreamble: true });
-        const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
+    clearBtn.addEventListener('click', () => {
+        canvas.clear();
+        // Re-set background color if clearing also removes it
+        canvas.setBackgroundColor('white', canvas.renderAll.bind(canvas));
+    });
+
+    saveBtn.addEventListener('click', () => {
+        const svgData = canvas.toSVG();
         const a = document.createElement('a');
-        a.href = url;
+        a.href = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
         a.download = 'drawing.svg';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-    loadSvgButton.onclick = () => { loadSvgInput.value = ''; loadSvgInput.click(); };
-    loadSvgInput.onchange = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        if (file.type !== 'image/svg+xml') { alert('Please select an SVG file.'); return; }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            fabric.loadSVGFromString(e.target.result, (objects, options) => {
-                if (!objects || objects.length === 0) { alert('Could not load SVG.'); return; }
-                // Always create a group, even if only one object
-                const group = new fabric.Group(objects, options);
-                group.set({ selectable: true, evented: true });
-                canvas.add(group);
-                canvas.renderAll();
-            });
-        };
-        reader.readAsText(file);
-    };
+    });
 
-    // --- Clear Canvas ---
-    document.getElementById('clear-canvas').onclick = () => {
-        canvas.clear();
-        canvas.backgroundColor = '#fff';
-        canvas.renderAll();
-    };
+    // --- Canvas Mouse Events ---
+    canvas.on('mouse:down', (options) => {
+        isDrawing = true;
+        const pointer = canvas.getPointer(options.e);
+        currentPoints = [[pointer.x, pointer.y, options.e.pressure || 0.5]]; // Start with one point
+    });
 
-    // --- Keyboard Delete ---
-    window.addEventListener('keydown', (e) => {
-        if ((e.key === 'Delete' || e.key === 'Backspace') && document.activeElement.tagName !== 'INPUT') {
-            const activeObjects = canvas.getActiveObjects();
-            if (activeObjects.length > 0) {
-                activeObjects.forEach(obj => canvas.remove(obj));
-                canvas.discardActiveObject();
-                canvas.renderAll();
-            }
+    canvas.on('mouse:move', (options) => {
+        if (!isDrawing) return;
+        const pointer = canvas.getPointer(options.e);
+        currentPoints.push([pointer.x, pointer.y, options.e.pressure || 0.5]);
+
+        // Optional: Draw a temporary path for better UX while moving
+        // For simplicity, we'll only draw the final path on mouse:up
+    });
+
+    canvas.on('mouse:up', () => {
+        if (!isDrawing || currentPoints.length < 2) {
+            isDrawing = false;
+            currentPoints = [];
+            return;
         }
+        isDrawing = false;
+
+        const stroke = getStroke(currentPoints, pfOptions);
+        const pathData = getSvgPathFromStroke(stroke);
+
+        const path = new fabric.Path(pathData, {
+            fill: null, // No fill for strokes
+            stroke: (currentTool === 'eraser') ? canvas.backgroundColor : currentColor,
+            strokeWidth: 1, // perfect-freehand handles the width via the path shape
+            strokeLineCap: 'round',
+            strokeLineJoin: 'round',
+            selectable: false, // Make paths non-selectable
+            evented: false,    // Make paths non-evented
+        });
+
+        canvas.add(path);
+        canvas.renderAll();
+        currentPoints = [];
+    });
+
+    // Helper function (from perfect-freehand docs) to convert points to SVG path data
+    function getSvgPathFromStroke(stroke) {
+        if (!stroke.length) return '';
+
+        const d = stroke.reduce(
+            (acc, [x0, y0], i, arr) => {
+                const [x1, y1] = arr[(i + 1) % arr.length];
+                acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+                return acc;
+            },
+            ['M', ...stroke[0], 'Q']
+        );
+
+        d.push('Z');
+        return d.join(' ');
+    }
+
+    // Initial UI update
+    strokeWidthValue.textContent = currentStrokeWidth;
+    pencilBtn.classList.add('active'); // Default to pencil
+
+    // Adjust canvas size on window resize (basic)
+    window.addEventListener('resize', () => {
+        canvas.setWidth(window.innerWidth * 0.9);
+        canvas.setHeight(window.innerHeight * 0.75);
+        canvas.renderAll();
     });
 });

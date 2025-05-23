@@ -8,10 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
         backgroundColor: '#fff',
     });
 
-    // --- Make canvas fill the available screen ---
+    // --- Make canvas fill the available screen, but cap size on mobile ---
     function resizeCanvasToFullScreen() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        // Cap size for mobile
+        if (window.innerWidth < 800) {
+            width = Math.min(width, 800);
+            height = Math.min(height, 1200);
+        }
         canvas.setWidth(width);
         canvas.setHeight(height);
         canvas.calcOffset();
@@ -26,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStrokeWidth = 2;
     let drawingShape = null;
     let brushPoints = [];
+    let brushMoveCounter = 0;
 
     // --- Toolbar Elements ---
     const colorPicker = document.getElementById('color-picker');
@@ -36,10 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Tool Switching ---
     function activateTool(tool) {
         currentTool = tool;
-        canvas.isDrawingMode = false;
-        canvas.selection = (tool === 'select');
-        canvas.defaultCursor = (tool === 'select') ? 'default' : 'crosshair';
-        canvas.getObjects().forEach(obj => obj.set({ selectable: tool === 'select', evented: tool === 'select' }));
+        if (tool === 'select') {
+            canvas.isDrawingMode = false;
+            canvas.selection = true;
+            canvas.defaultCursor = 'default';
+            canvas.getObjects().forEach(obj => obj.set({ selectable: true, evented: true }));
+        } else {
+            canvas.isDrawingMode = false;
+            canvas.selection = false;
+            canvas.defaultCursor = 'crosshair';
+            canvas.getObjects().forEach(obj => obj.set({ selectable: false, evented: false }));
+        }
         canvas.discardActiveObject().renderAll();
     }
     document.getElementById('tool-select').onclick = () => activateTool('select');
@@ -75,6 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     canvas.on('mouse:move', o => {
         if (currentTool === 'brush' && brushPoints.length) {
+            brushMoveCounter++;
+            if (brushMoveCounter % 2 !== 0) return; // Skip every other event for performance
             const pointer = canvas.getPointer(o.e);
             brushPoints.push([pointer.x, pointer.y, 0.5]);
             drawBrushStroke();
@@ -95,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     canvas.on('mouse:up', () => {
+        brushMoveCounter = 0;
         if (currentTool === 'brush' && brushPoints.length) {
             finalizeBrushStroke();
         } else if (drawingShape) {

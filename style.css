@@ -3,6 +3,7 @@ body {
     margin: 0;
     background: #f4f4f4;
     overflow: hidden;
+    touch-action: none;
 }
 
 .toolbar {

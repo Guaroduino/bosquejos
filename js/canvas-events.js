@@ -3,6 +3,7 @@ import { handleShapeMouseDown, handleShapeMouseMove, handleShapeMouseUp } from '
 import { handlePolylineMouseDown, handlePolylineMouseMove, finishPolylineDrawing } from './tools/polyline-tool.js';
 import { handleSplineMouseDown, handleSplineMouseMove, finishSplineDrawing } from './tools/spline-tool.js';
 import { handleTextMouseDown } from './tools/text-tool.js';
+import { CanvasRulers } from './rulers.js';
 
 // Función auxiliar para determinar si la herramienta actual es de dibujo
 function isDrawingTool(tool) {
@@ -12,6 +13,9 @@ function isDrawingTool(tool) {
 export function setupCanvasEventHandlers(appState) {
     const fabricCanvas = appState.fabricCanvas;
     let lastClientX, lastClientY; // Para el paneo con botón central
+
+    // Inicializar las reglas
+    const rulers = new CanvasRulers(fabricCanvas);
 
     // Función para actualizar la configuración de selección según la herramienta
     function updateSelectionSettings() {
@@ -79,8 +83,7 @@ export function setupCanvasEventHandlers(appState) {
             lastClientY = event.clientY;
 
             fabricCanvas.relativePan(new fabric.Point(deltaX, deltaY));
-            // No es necesario renderAll() aquí si relativePan lo hace, pero por si acaso:
-            // fabricCanvas.requestRenderAll(); 
+            rulers.updateRulers(); // Actualizar reglas después del paneo
             return;
         }
 
@@ -125,10 +128,12 @@ export function setupCanvasEventHandlers(appState) {
     });
 
     fabricCanvas.on('mouse:wheel', function(opt) { 
-        let z=fabricCanvas.getZoom()*(0.999**opt.e.deltaY); 
-        z=Math.max(0.01,Math.min(20,z)); 
-        fabricCanvas.zoomToPoint({x:opt.e.offsetX,y:opt.e.offsetY},z); 
-        opt.e.preventDefault(); opt.e.stopPropagation(); 
+        let z = fabricCanvas.getZoom() * (0.999 ** opt.e.deltaY); 
+        z = Math.max(0.01, Math.min(20, z)); 
+        fabricCanvas.zoomToPoint({x: opt.e.offsetX, y: opt.e.offsetY}, z); 
+        rulers.updateRulers(); // Actualizar reglas después del zoom
+        opt.e.preventDefault(); 
+        opt.e.stopPropagation(); 
     });
 
     const canvasContainer = fabricCanvas.wrapperEl; 

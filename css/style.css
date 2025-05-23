@@ -98,3 +98,77 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     border: 2px dashed var(--primary-accent);
     background-color: #eef7ff; 
 }
+
+.canvas-container {
+    position: relative;
+    margin: 20px;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+.canvas-rulers {
+    position: absolute;
+    background: #f5f5f5;
+    z-index: 1;
+}
+
+.ruler-h {
+    top: -20px;
+    left: 20px;
+    right: 0;
+    height: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+.ruler-v {
+    top: 0;
+    left: -20px;
+    width: 20px;
+    height: 100%;
+    border-right: 1px solid #ccc;
+}
+
+.ruler-corner {
+    top: -20px;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background: #f5f5f5;
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+
+.ruler-mark {
+    position: absolute;
+    background: #666;
+}
+
+.ruler-mark-h {
+    width: 1px;
+    height: 6px;
+    bottom: 0;
+}
+
+.ruler-mark-v {
+    width: 6px;
+    height: 1px;
+    right: 0;
+}
+
+.ruler-text {
+    position: absolute;
+    font-size: 10px;
+    color: #666;
+    user-select: none;
+}
+
+.ruler-text-h {
+    transform: translateX(-50%);
+    bottom: 2px;
+}
+
+.ruler-text-v {
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: right center;
+    right: 2px;
+}

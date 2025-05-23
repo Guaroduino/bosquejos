@@ -105,6 +105,8 @@ body {
     touch-action: none;
     margin: 0;
     box-sizing: border-box;
+    position: relative;
+    z-index: 1;
 }
 
 body.placing-svg-mode .canvas-container {
@@ -150,7 +152,9 @@ body.placing-svg-mode .canvas-container .active {
     max-height: calc(100vh - 60px) !important;
     margin: 0 !important;
     box-sizing: border-box;
-    background: none;
+    background: #fff;
+    position: relative;
+    z-index: 1;
 }
 
 /* Improve touch feedback */

@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if Fabric.js is loaded
+    if (typeof fabric === 'undefined') {
+        console.error('Fabric.js is not loaded!');
+        alert('Error: Fabric.js library failed to load. Please refresh the page or check your internet connection.');
+        return;
+    }
+
     // Initialize Fabric.js canvas with touch support
     const fabricCanvas = new fabric.Canvas('drawing-canvas', {
         isDrawingMode: false,

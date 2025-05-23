@@ -28,36 +28,37 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 /* Panel de la Librería SVG */
 .svg-library-panel {
     width: 250px; 
-    min-width: 250px; /* Fijar min-width para que no se encoja demasiado con el contenido */
+    min-width: 250px;
+    height: 75vh; /* Altura fija al 75% del viewport */
+    margin-top: 20px; /* Espacio arriba */
     background-color: var(--toolbar-bg); 
     border-right: 1px solid var(--border-color);
+    border-radius: 0 8px 8px 0; /* Bordes redondeados en el lado derecho */
     padding: 10px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease-in-out; /* Transición para el deslizamiento */
-    position: relative; /* z-index funciona en elementos posicionados */
-    z-index: 90; 
-    /* transform: translateX(0); Lo quitamos de aquí para el estado por defecto */
+    transition: transform 0.3s ease-in-out;
+    position: relative;
+    z-index: 90;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
 
 .svg-library-panel.collapsed {
-    transform: translateX(-100%); /* Mover fuera de la vista a la izquierda */
-    /* width: 0; min-width: 0; padding: 0; border-right: none; Ya no son necesarios con transform */
+    transform: translateX(-100%);
 }
 
 /* Botón para mostrar/ocultar la librería */
 .toggle-library-btn {
-    position: fixed; /* Fijado al viewport para que siempre esté visible */
+    position: fixed;
     top: 50%;
-    left: 5px; /* Distancia inicial desde la izquierda */
-    transform: translateY(-50%) rotate(0deg); /* Estado inicial (flecha para abrir) */
+    left: 5px;
+    transform: translateY(-50%);
     width: 30px;
-    height: 60px; 
+    height: 60px;
     background-color: var(--primary-accent);
     color: white;
     border: none;
-    border-top-right-radius: 8px;  
-    border-bottom-right-radius: 8px;
+    border-radius: 0 8px 8px 0;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -65,29 +66,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     font-size: 1.2em;
     font-weight: bold;
     box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    z-index: 105; /* Encima de todo, incluso la toolbar si se superponen */
-    transition: transform 0.3s ease-in-out, left 0.3s ease-in-out;
-}
-.toggle-library-btn:hover {
-    background-color: #0056b3;
+    z-index: 105;
+    transition: all 0.3s ease-in-out;
 }
 
-/* Cuando el panel NO está colapsado, el botón se mueve con el panel */
-.svg-library-panel:not(.collapsed) + .main-content .toggle-library-btn {
-    /* Este selector es si el botón estuviera DENTRO de main-content */
-    /* Como ahora es fixed, no necesitamos este ajuste de main-content para el botón */
+.toggle-library-btn:hover {
+    background-color: #0056b3;
+    width: 35px; /* Ligeramente más ancho al hover */
 }
+
 /* Ajustar el botón cuando el panel está visible */
 body:has(.svg-library-panel:not(.collapsed)) .toggle-library-btn {
-    left: 235px; /* ancho del panel (250px) - mitad del botón (15px) + un pequeño offset (5px) */
-    transform: translateY(-50%) rotate(180deg); /* Flecha para cerrar */
+    left: 235px;
 }
+
 /* Si el panel está colapsado, el botón se queda a la izquierda */
 body:has(.svg-library-panel.collapsed) .toggle-library-btn {
     left: 5px;
-    transform: translateY(-50%) rotate(0deg); /* Flecha para abrir */
 }
-
 
 .svg-library-panel h3 {
     margin-top: 0;
@@ -134,8 +130,8 @@ body:has(.svg-library-panel.collapsed) .toggle-library-btn {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
-    /* Ya no necesitamos margin-left aquí si el panel se desliza por encima o el botón es fixed */
+    overflow: hidden;
+    margin-left: 0; /* Aseguramos que no haya margen */
 }
 
 /* Estilos de la Toolbar Superior (como estaban) */

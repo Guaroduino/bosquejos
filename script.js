@@ -70,50 +70,35 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.on('mouse:down', o => {
         if (currentTool === 'select') return;
         const pointer = canvas.getPointer(o.e);
-        if (currentTool === 'brush') {
-            brushPoints = [[pointer.x, pointer.y, 0.5]];
-            drawBrushStroke();
-        } else {
-            const common = { stroke: currentColor, strokeWidth: currentStrokeWidth, fill: 'transparent', selectable: false, evented: false };
-            if (currentTool === 'line') {
-                drawingShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], common);
-            } else if (currentTool === 'rect') {
-                drawingShape = new fabric.Rect({ left: pointer.x, top: pointer.y, width: 0, height: 0, ...common });
-            } else if (currentTool === 'circle') {
-                drawingShape = new fabric.Circle({ left: pointer.x, top: pointer.y, radius: 0, originX: 'center', originY: 'center', ...common });
-            }
-            if (drawingShape) canvas.add(drawingShape);
+        const common = { stroke: currentColor, strokeWidth: currentStrokeWidth, fill: 'transparent', selectable: false, evented: false };
+        if (currentTool === 'line') {
+            drawingShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], common);
+        } else if (currentTool === 'rect') {
+            drawingShape = new fabric.Rect({ left: pointer.x, top: pointer.y, width: 0, height: 0, ...common });
+        } else if (currentTool === 'circle') {
+            drawingShape = new fabric.Circle({ left: pointer.x, top: pointer.y, radius: 0, originX: 'center', originY: 'center', ...common });
         }
+        if (drawingShape) canvas.add(drawingShape);
     });
 
     canvas.on('mouse:move', o => {
-        if (currentTool === 'brush' && brushPoints.length) {
-            brushMoveCounter++;
-            if (brushMoveCounter % 2 !== 0) return; // Skip every other event for performance
-            const pointer = canvas.getPointer(o.e);
-            brushPoints.push([pointer.x, pointer.y, 0.5]);
-            drawBrushStroke();
-        } else if (drawingShape && (currentTool === 'line' || currentTool === 'rect' || currentTool === 'circle')) {
-            const pointer = canvas.getPointer(o.e);
-            if (currentTool === 'line') {
-                drawingShape.set({ x2: pointer.x, y2: pointer.y });
-            } else if (currentTool === 'rect') {
-                const width = pointer.x - drawingShape.left;
-                const height = pointer.y - drawingShape.top;
-                drawingShape.set({ width: Math.abs(width), height: Math.abs(height), left: width > 0 ? drawingShape.left : pointer.x, top: height > 0 ? drawingShape.top : pointer.y });
-            } else if (currentTool === 'circle') {
-                const radius = Math.sqrt(Math.pow(pointer.x - drawingShape.left, 2) + Math.pow(pointer.y - drawingShape.top, 2));
-                drawingShape.set({ radius });
-            }
-            canvas.renderAll();
+        if (!drawingShape) return;
+        const pointer = canvas.getPointer(o.e);
+        if (currentTool === 'line') {
+            drawingShape.set({ x2: pointer.x, y2: pointer.y });
+        } else if (currentTool === 'rect') {
+            const width = pointer.x - drawingShape.left;
+            const height = pointer.y - drawingShape.top;
+            drawingShape.set({ width: Math.abs(width), height: Math.abs(height), left: width > 0 ? drawingShape.left : pointer.x, top: height > 0 ? drawingShape.top : pointer.y });
+        } else if (currentTool === 'circle') {
+            const radius = Math.sqrt(Math.pow(pointer.x - drawingShape.left, 2) + Math.pow(pointer.y - drawingShape.top, 2));
+            drawingShape.set({ radius });
         }
+        canvas.renderAll();
     });
 
     canvas.on('mouse:up', () => {
-        brushMoveCounter = 0;
-        if (currentTool === 'brush' && brushPoints.length) {
-            finalizeBrushStroke();
-        } else if (drawingShape) {
+        if (drawingShape) {
             drawingShape.set({ selectable: true, evented: true });
             drawingShape = null;
         }

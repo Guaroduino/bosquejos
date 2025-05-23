@@ -171,9 +171,9 @@ export function updateActiveToolIndicatorInUI(toolId) {
 export function setActiveToolState(tool, appState) {
     const fabricCanvas = appState.fabricCanvas;
 
-    // 1. Botón activo cambia de color
+    // 1. Botón activo cambia de color (incluye seleccionar)
     document.querySelectorAll('.tool-button').forEach(btn => {
-        btn.classList.toggle('active', btn.id === tool + '-tool');
+        btn.classList.toggle('active', btn.id === tool + '-tool' || (tool === 'select' && btn.id === 'select-tool'));
     });
 
     // 2. Mostrar nombre de herramienta activa en el botón 'Dibujar'
@@ -181,7 +181,6 @@ export function setActiveToolState(tool, appState) {
     const drawLabel = document.getElementById('active-draw-tool-label');
     if (drawLabel) {
         if (drawTools.includes(tool)) {
-            // Obtener el nombre legible desde el botón
             const btn = document.getElementById(tool + '-tool');
             drawLabel.textContent = btn ? `: ${btn.getAttribute('data-tool-name')}` : '';
         } else {
@@ -189,22 +188,35 @@ export function setActiveToolState(tool, appState) {
         }
     }
 
+    // 3. Modo de dibujo de Fabric.js
     fabricCanvas.isDrawingMode = (tool === 'pencil');
-    updateActiveToolIndicatorInUI(tool + '-tool'); 
+
+    // 4. Actualizar el dropdown visualmente
+    document.querySelectorAll('.dropdown-button').forEach(btn => btn.classList.remove('active-parent'));
+    if (tool === 'select') {
+        // Nada especial
+    } else if (drawTools.includes(tool)) {
+        const drawDropdown = document.querySelector('[data-dropdown-group="draw"] .dropdown-button');
+        if (drawDropdown) drawDropdown.classList.add('active-parent');
+    }
+
+    // 5. Opciones de texto
     const textOptionsPanel = document.getElementById('text-options-toolbar-group');
     const activeObject = fabricCanvas.getActiveObject();
     textOptionsPanel.classList.toggle('hidden', !(tool === 'text' || (activeObject && activeObject.type === 'i-text')));
+
+    // 6. Selección y cursor
     fabricCanvas.selection = (tool === 'select');
     fabricCanvas.defaultCursor = (tool === 'select') ? 'default' : 'crosshair';
     if (tool === 'polyline' || tool === 'spline') { fabricCanvas.defaultCursor = 'crosshair'; fabricCanvas.selection = false; }
-    if (tool === 'pencil') { 
+    if (tool === 'pencil') {
         fabricCanvas.freeDrawingBrush.color = document.getElementById('stroke-color').value;
         fabricCanvas.freeDrawingBrush.width = parseInt(document.getElementById('stroke-width').value, 10);
-     }
-    if (tool !== 'select' && tool !== 'text' && activeObject && !(activeObject.type === 'i-text' && tool === 'select')) { 
-        fabricCanvas.discardActiveObject(); 
     }
-    fabricCanvas.renderAll(); 
+    if (tool !== 'select' && tool !== 'text' && activeObject && !(activeObject.type === 'i-text' && tool === 'select')) {
+        fabricCanvas.discardActiveObject();
+    }
+    fabricCanvas.renderAll();
     if (tool !== 'select') closeAllDropdownsFromUI();
 }
 

@@ -44,12 +44,12 @@ export class CanvasRulers {
         this.rulersContainer.appendChild(this.rulerH);
         this.rulersContainer.appendChild(this.rulerV);
 
-        // Agregar contenedor de reglas antes del canvas
-        this.container.parentNode.insertBefore(this.rulersContainer, this.container);
+        // Agregar contenedor de reglas dentro del contenedor del canvas
+        this.container.appendChild(this.rulersContainer);
 
-        // Ajustar posición del canvas
-        this.container.style.marginLeft = '20px';
-        this.container.style.marginTop = '20px';
+        // Quitar cualquier margen del canvas
+        this.container.style.marginLeft = '0';
+        this.container.style.marginTop = '0';
     }
 
     updateRulers() {

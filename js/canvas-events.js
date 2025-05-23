@@ -38,14 +38,16 @@ export function setupCanvasEventHandlers(appState) {
         // --- Paneo con Botón Central (Rueda) ---
         if (event.button === 1) { // 1 es el botón central del ratón
             appState.isMiddleMouseButtonPanning = true;
-            // Guardar la posición inicial del ratón para calcular el delta en mouse:move
             lastClientX = event.clientX;
             lastClientY = event.clientY;
-            fabricCanvas.defaultCursor = 'grabbing'; // Cambiar cursor a mano agarrando
-            fabricCanvas.selection = false; // Desactivar selección de objetos mientras se panea
+            fabricCanvas.defaultCursor = 'grabbing';
+            fabricCanvas.selection = false;
             fabricCanvas.renderAll();
-            event.preventDefault(); // Evitar comportamiento por defecto del navegador (ej. autoscroll)
-            return; // No procesar otras lógicas de mouse:down si estamos paneando
+            event.preventDefault();
+            // Escuchar paneo globalmente
+            window.addEventListener('mousemove', handleGlobalPanMove);
+            window.addEventListener('mouseup', handleGlobalPanUp);
+            return;
         }
 
         if (appState.isPanningWithSpacebar) return; // Si ya estamos paneando con barra espaciadora
@@ -66,6 +68,26 @@ export function setupCanvasEventHandlers(appState) {
                 handleTextMouseDown(o, appState); break;
         }
     });
+
+    function handleGlobalPanMove(e) {
+        if (appState.isMiddleMouseButtonPanning) {
+            const deltaX = e.clientX - lastClientX;
+            const deltaY = e.clientY - lastClientY;
+            lastClientX = e.clientX;
+            lastClientY = e.clientY;
+            fabricCanvas.relativePan(new fabric.Point(deltaX, deltaY));
+            rulers.updateRulers();
+            e.preventDefault();
+        }
+    }
+    function handleGlobalPanUp(e) {
+        if (e.button === 1 && appState.isMiddleMouseButtonPanning) {
+            appState.isMiddleMouseButtonPanning = false;
+            fabricCanvas.defaultCursor = isDrawingTool(appState.currentTool) ? 'crosshair' : 'default';
+            window.removeEventListener('mousemove', handleGlobalPanMove);
+            window.removeEventListener('mouseup', handleGlobalPanUp);
+        }
+    }
 
     fabricCanvas.on('mouse:move', (o) => {
         const event = o.e;

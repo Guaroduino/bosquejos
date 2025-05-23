@@ -23,13 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPoints = []; // To store points for perfect-freehand
 
     // --- Perfect-Freehand Stroke Options ---
-    // (getStroke is globally available from the perfect-freehand script)
     const pfOptions = {
         size: currentStrokeWidth,
-        thinning: 0.6, // How much the line thins when pressure is light
-        smoothing: 0.5, // How much to smooth the stroke
-        streamline: 0.5, // How much to streamline the stroke
-        easing: (t) => t, // Linear easing
+        thinning: 0.6,
+        smoothing: 0.5,
+        streamline: 0.5,
+        easing: (t) => t,
         start: {
             taper: 0,
             cap: true
@@ -60,12 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
     strokeWidthSlider.addEventListener('input', (e) => {
         currentStrokeWidth = parseInt(e.target.value);
         strokeWidthValue.textContent = currentStrokeWidth;
-        pfOptions.size = currentStrokeWidth; // Update perfect-freehand option
+        pfOptions.size = currentStrokeWidth;
     });
 
     clearBtn.addEventListener('click', () => {
         canvas.clear();
-        // Re-set background color if clearing also removes it
         canvas.setBackgroundColor('white', canvas.renderAll.bind(canvas));
     });
 
@@ -83,16 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.on('mouse:down', (options) => {
         isDrawing = true;
         const pointer = canvas.getPointer(options.e);
-        currentPoints = [[pointer.x, pointer.y, options.e.pressure || 0.5]]; // Start with one point
+        currentPoints = [[pointer.x, pointer.y, options.e.pressure || 0.5]];
     });
 
     canvas.on('mouse:move', (options) => {
         if (!isDrawing) return;
         const pointer = canvas.getPointer(options.e);
         currentPoints.push([pointer.x, pointer.y, options.e.pressure || 0.5]);
-
-        // Optional: Draw a temporary path for better UX while moving
-        // For simplicity, we'll only draw the final path on mouse:up
     });
 
     canvas.on('mouse:up', () => {
@@ -103,17 +98,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         isDrawing = false;
 
-        const stroke = getStroke(currentPoints, pfOptions);
-        const pathData = getSvgPathFromStroke(stroke);
+        // Use functions from the PerfectFreehand global object
+        const strokeOutlinePoints = PerfectFreehand.getStroke(currentPoints, pfOptions);
+
+        // If getStroke returns no points, or very few, it might not be drawable
+        if (!strokeOutlinePoints || strokeOutlinePoints.length === 0) {
+            currentPoints = [];
+            return;
+        }
+
+        const pathData = PerfectFreehand.getSvgPathFromStroke(strokeOutlinePoints);
+
+        if (!pathData || pathData.length === 0) {
+            currentPoints = [];
+            return; // No path data to draw
+        }
 
         const path = new fabric.Path(pathData, {
-            fill: null, // No fill for strokes
-            stroke: (currentTool === 'eraser') ? canvas.backgroundColor : currentColor,
-            strokeWidth: 1, // perfect-freehand handles the width via the path shape
-            strokeLineCap: 'round',
-            strokeLineJoin: 'round',
-            selectable: false, // Make paths non-selectable
-            evented: false,    // Make paths non-evented
+            // The path from perfect-freehand is an outline. Fill it to get a solid line.
+            fill: (currentTool === 'eraser') ? canvas.backgroundColor : currentColor,
+            stroke: null, // No stroke for the outline itself
+            selectable: false,
+            evented: false,
         });
 
         canvas.add(path);
@@ -121,28 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPoints = [];
     });
 
-    // Helper function (from perfect-freehand docs) to convert points to SVG path data
-    function getSvgPathFromStroke(stroke) {
-        if (!stroke.length) return '';
-
-        const d = stroke.reduce(
-            (acc, [x0, y0], i, arr) => {
-                const [x1, y1] = arr[(i + 1) % arr.length];
-                acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-                return acc;
-            },
-            ['M', ...stroke[0], 'Q']
-        );
-
-        d.push('Z');
-        return d.join(' ');
-    }
+    // The local getSvgPathFromStroke function is no longer needed
+    // as PerfectFreehand.getSvgPathFromStroke is used.
 
     // Initial UI update
     strokeWidthValue.textContent = currentStrokeWidth;
-    pencilBtn.classList.add('active'); // Default to pencil
+    pencilBtn.classList.add('active');
 
-    // Adjust canvas size on window resize (basic)
     window.addEventListener('resize', () => {
         canvas.setWidth(window.innerWidth * 0.9);
         canvas.setHeight(window.innerHeight * 0.75);

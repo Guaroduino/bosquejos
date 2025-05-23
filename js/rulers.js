@@ -10,18 +10,34 @@ export class CanvasRulers {
         // Crear contenedor de reglas
         this.rulersContainer = document.createElement('div');
         this.rulersContainer.className = 'canvas-rulers';
+        this.rulersContainer.style.pointerEvents = 'none';
 
         // Crear regla horizontal
         this.rulerH = document.createElement('div');
         this.rulerH.className = 'ruler-h';
+        this.rulerH.style.position = 'absolute';
+        this.rulerH.style.left = '20px';
+        this.rulerH.style.top = '0';
+        this.rulerH.style.right = '0';
+        this.rulerH.style.height = '20px';
 
         // Crear regla vertical
         this.rulerV = document.createElement('div');
         this.rulerV.className = 'ruler-v';
+        this.rulerV.style.position = 'absolute';
+        this.rulerV.style.left = '0';
+        this.rulerV.style.top = '20px';
+        this.rulerV.style.width = '20px';
+        this.rulerV.style.bottom = '0';
 
         // Crear esquina
         this.rulerCorner = document.createElement('div');
         this.rulerCorner.className = 'ruler-corner';
+        this.rulerCorner.style.position = 'absolute';
+        this.rulerCorner.style.left = '0';
+        this.rulerCorner.style.top = '0';
+        this.rulerCorner.style.width = '20px';
+        this.rulerCorner.style.height = '20px';
 
         // Agregar reglas al contenedor
         this.rulersContainer.appendChild(this.rulerCorner);
@@ -48,36 +64,57 @@ export class CanvasRulers {
 
         // Calcular intervalos basados en el zoom
         const interval = this.calculateInterval(zoom);
-        const startX = Math.floor(-vpt[4] / zoom / interval) * interval;
-        const startY = Math.floor(-vpt[5] / zoom / interval) * interval;
-        const endX = Math.ceil((width - vpt[4]) / zoom / interval) * interval;
-        const endY = Math.ceil((height - vpt[5]) / zoom / interval) * interval;
+        // El desplazamiento del viewport (paneo) en pixeles
+        const offsetX = vpt[4];
+        const offsetY = vpt[5];
 
-        // Crear marcas horizontales
-        for (let x = startX; x <= endX; x += interval) {
+        // El área visible en coordenadas canvas
+        const visibleStartX = Math.max(0, -offsetX / zoom);
+        const visibleEndX = Math.min(width, (this.container.clientWidth - offsetX) / zoom);
+        const visibleStartY = Math.max(0, -offsetY / zoom);
+        const visibleEndY = Math.min(height, (this.container.clientHeight - offsetY) / zoom);
+
+        // Marcas horizontales (arriba)
+        for (let x = Math.floor(visibleStartX / interval) * interval; x <= visibleEndX; x += interval) {
+            const px = Math.round(x * zoom + offsetX);
+            if (px < 0 || px > this.container.clientWidth) continue;
             const mark = document.createElement('div');
             mark.className = 'ruler-mark ruler-mark-h';
-            mark.style.left = `${x * zoom + vpt[4]}px`;
+            mark.style.left = `${px}px`;
+            mark.style.height = '6px';
+            mark.style.width = '1px';
+            mark.style.bottom = '0';
+            mark.style.position = 'absolute';
 
             const text = document.createElement('div');
             text.className = 'ruler-text ruler-text-h';
             text.textContent = x;
-            text.style.left = `${x * zoom + vpt[4]}px`;
+            text.style.left = `${px}px`;
+            text.style.position = 'absolute';
+            text.style.bottom = '2px';
 
             this.rulerH.appendChild(mark);
             this.rulerH.appendChild(text);
         }
 
-        // Crear marcas verticales
-        for (let y = startY; y <= endY; y += interval) {
+        // Marcas verticales (izquierda)
+        for (let y = Math.floor(visibleStartY / interval) * interval; y <= visibleEndY; y += interval) {
+            const py = Math.round(y * zoom + offsetY);
+            if (py < 0 || py > this.container.clientHeight) continue;
             const mark = document.createElement('div');
             mark.className = 'ruler-mark ruler-mark-v';
-            mark.style.top = `${y * zoom + vpt[5]}px`;
+            mark.style.top = `${py}px`;
+            mark.style.width = '6px';
+            mark.style.height = '1px';
+            mark.style.right = '0';
+            mark.style.position = 'absolute';
 
             const text = document.createElement('div');
             text.className = 'ruler-text ruler-text-v';
             text.textContent = y;
-            text.style.top = `${y * zoom + vpt[5]}px`;
+            text.style.top = `${py}px`;
+            text.style.position = 'absolute';
+            text.style.right = '2px';
 
             this.rulerV.appendChild(mark);
             this.rulerV.appendChild(text);
@@ -85,7 +122,6 @@ export class CanvasRulers {
     }
 
     calculateInterval(zoom) {
-        // Ajustar el intervalo basado en el nivel de zoom
         if (zoom < 0.5) return 100;
         if (zoom < 1) return 50;
         if (zoom < 2) return 20;

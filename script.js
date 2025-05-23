@@ -152,7 +152,7 @@ class ToolManager {
     updateBrushStroke() {
         if (this.brushPoints.length < 2) return;
 
-        const stroke = perfectFreehand.getStroke(this.brushPoints, {
+        const stroke = getStroke(this.brushPoints, {
             ...this.brushOptions,
             size: this.currentStrokeWidth * 8,
             color: this.currentColor

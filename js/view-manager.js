@@ -16,43 +16,6 @@ export function setupViewControls(appState) {
         setCanvasZoom(newZoom, appState);
     });
 
-    // Paneo con botón central del mouse sobre el canvas
-    canvasEl.addEventListener('mousedown', (e) => {
-        if (e.button === 1) {
-            e.preventDefault();
-            isPanning = true;
-            lastPosX = e.clientX;
-            lastPosY = e.clientY;
-            canvasEl.style.cursor = 'grabbing';
-        }
-    });
-
-    window.addEventListener('mousemove', (e) => {
-        if (isPanning) {
-            e.preventDefault();
-            const deltaX = e.clientX - lastPosX;
-            const deltaY = e.clientY - lastPosY;
-            const zoom = fabricCanvas.getZoom();
-            fabricCanvas.relativePan({ x: deltaX / zoom, y: deltaY / zoom });
-            lastPosX = e.clientX;
-            lastPosY = e.clientY;
-        }
-    });
-
-    window.addEventListener('mouseup', (e) => {
-        if (e.button === 1 && isPanning) {
-            isPanning = false;
-            canvasEl.style.cursor = 'default';
-        }
-    });
-
-    canvasWrapper.addEventListener('mouseleave', () => {
-        if (isPanning) {
-            isPanning = false;
-            canvasWrapper.style.cursor = 'default';
-        }
-    });
-
     // Botones de zoom
     document.getElementById('zoom-in').addEventListener('click', () => { 
         setCanvasZoom(fabricCanvas.getZoom() * 1.2, appState); 

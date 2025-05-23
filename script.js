@@ -155,13 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (e) => {
             fabric.loadSVGFromString(e.target.result, (objects, options) => {
                 if (!objects || objects.length === 0) { alert('Could not load SVG.'); return; }
-                let group = fabric.util.groupSVGElements(objects, options);
-                // If not a group, wrap in array
-                if (typeof group.getObjects !== 'function') group = [group];
-                (Array.isArray(group) ? group : group.getObjects()).forEach(obj => {
-                    obj.set({ selectable: true, evented: true });
-                    canvas.add(obj);
-                });
+                // Always create a group, even if only one object
+                const group = new fabric.Group(objects, options);
+                group.set({ selectable: true, evented: true });
+                canvas.add(group);
                 canvas.renderAll();
             });
         };

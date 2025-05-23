@@ -1,326 +1,40 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fabricCanvas = new fabric.Canvas('drawing-canvas', {
-        isDrawingMode: false,
-        selection: true,
-        backgroundColor: '#fff',
-        // Set initial dimensions; resizeCanvas will adjust
-        width: 600,
-        height: 400
-    });
-
-    const toolbar = document.querySelector('.toolbar');
-    const colorPicker = document.getElementById('color-picker');
-    const strokeWidthPicker = document.getElementById('stroke-width-picker');
-    const loadSvgInput = document.getElementById('load-svg-input');
-    const loadSvgButton = document.getElementById('load-svg-button');
-    const statusMessage = document.getElementById('status-message');
-
-    let currentTool = 'line';
-    let isDrawingShape = false;
-    let startCoords = null; // {x, y}
-    let currentShape = null;
-
-    let currentColor = '#000000';
-    let currentStrokeWidth = 2;
-
-    let isPlacingSvgMode = false;
-    let loadedSvgGroup = null;
-
-    function showStatus(message) {
-        statusMessage.textContent = message;
-        statusMessage.style.display = message ? 'block' : 'none';
-    }
-
-    function setPlacingSvgMode(active, svgGroup = null) {
-        isPlacingSvgMode = active;
-        loadedSvgGroup = svgGroup;
-        fabricCanvas.discardActiveObject();
-
-        if (active && svgGroup) {
-            document.body.classList.add('placing-svg-mode');
-            fabricCanvas.add(svgGroup);
-            fabricCanvas.centerObject(svgGroup);
-
-            // Scale to fit reasonably
-            const canvasRatio = fabricCanvas.width / fabricCanvas.height;
-            const svgRatio = svgGroup.width / svgGroup.height;
-            let scaleFactor;
-            if (canvasRatio > svgRatio) { // Canvas is wider or same aspect as SVG
-                scaleFactor = (fabricCanvas.height * 0.5) / svgGroup.height;
-            } else { // Canvas is taller or same aspect as SVG
-                scaleFactor = (fabricCanvas.width * 0.5) / svgGroup.width;
-            }
-            svgGroup.scale(scaleFactor);
-            
-            // Recenter after scaling
-            svgGroup.setCoords(); // Update controls
-            fabricCanvas.centerObject(svgGroup);
-
-
-            fabricCanvas.setActiveObject(svgGroup);
-            fabricCanvas.renderAll();
-            showStatus("SVG loaded. Use handles to resize/rotate, drag to position. Click tool or canvas to finalize.");
-            activateTool('select'); // Implicitly switch to select tool for manipulation
-        } else {
-            document.body.classList.remove('placing-svg-mode');
-            showStatus("");
-            if (svgGroup && !active && !fabricCanvas.contains(svgGroup)) { // If canceling placement before adding
-                // This case might not be hit if we always add it.
-            }
-            loadedSvgGroup = null; // Clear reference if finalized or canceled
-        }
-    }
-
-    function resizeCanvas() {
-        const toolbarHeight = toolbar.offsetHeight + 20;
-        const newWidth = window.innerWidth * 0.95;
-        const newHeight = Math.max(200, (window.innerHeight - toolbarHeight) * 0.95); // Min height
-
-        fabricCanvas.setWidth(newWidth);
-        fabricCanvas.setHeight(newHeight);
-        fabricCanvas.calcOffset();
-        fabricCanvas.renderAll();
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    const toolButtons = document.querySelectorAll('.tool-button');
-    function activateTool(toolName) {
-        toolButtons.forEach(btn => btn.classList.remove('active'));
-        const activeButton = document.getElementById(`tool-${toolName}`);
-        if (activeButton) activeButton.classList.add('active');
-
-        currentTool = toolName;
-
-        if (currentTool === 'select') {
-            fabricCanvas.isDrawingMode = false;
-            fabricCanvas.selection = true;
-            fabricCanvas.defaultCursor = 'default';
-            fabricCanvas.hoverCursor = 'move';
-            fabricCanvas.getObjects().forEach(obj => obj.set({ selectable: true, evented: true }));
-        } else {
-            fabricCanvas.isDrawingMode = false;
-            fabricCanvas.selection = false;
-            fabricCanvas.defaultCursor = 'crosshair';
-            fabricCanvas.hoverCursor = 'crosshair'; // Keep crosshair when over objects while drawing
-            fabricCanvas.getObjects().forEach(obj => obj.set({ selectable: false, evented: false }));
-        }
-        fabricCanvas.discardActiveObject().renderAll();
-    }
-
-    toolButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            if (isPlacingSvgMode) {
-                // Finalize SVG placement: simply make it not the 'loadedSvgGroup' anymore
-                // The object is already on canvas and active.
-                setPlacingSvgMode(false); // Clears the mode, keeps the object
-            }
-            activateTool(button.dataset.tool);
+// Canvas Manager Class
+class CanvasManager {
+    constructor(canvasId) {
+        this.canvas = new fabric.Canvas(canvasId, {
+            isDrawingMode: false,
+            selection: true,
+            backgroundColor: '#fff',
+            width: 600,
+            height: 400
         });
-    });
+        this.resizeCanvas = this.resizeCanvas.bind(this);
+        this.setupEventListeners();
+    }
 
-    colorPicker.addEventListener('input', (e) => {
-        currentColor = e.target.value;
-        const activeObj = fabricCanvas.getActiveObject();
-        if (activeObj) {
-            const applyColor = (obj) => { if (obj.stroke || obj.type === 'path') obj.set('stroke', currentColor); }; // Paths might not have stroke initially
-            if (activeObj.isType('activeSelection')) { // Group selection
-                activeObj.forEachObject(applyColor);
-            } else {
-                applyColor(activeObj);
-            }
-            fabricCanvas.renderAll();
-        }
-    });
+    setupEventListeners() {
+        window.addEventListener('resize', this.resizeCanvas);
+        this.resizeCanvas();
+    }
 
-    strokeWidthPicker.addEventListener('input', (e) => {
-        currentStrokeWidth = parseInt(e.target.value, 10) || 1;
-        const activeObj = fabricCanvas.getActiveObject();
-        if (activeObj) {
-            const applyStrokeWidth = (obj) => { if (obj.strokeWidth || obj.type === 'path') obj.set('strokeWidth', currentStrokeWidth); };
-            if (activeObj.isType('activeSelection')) {
-                activeObj.forEachObject(applyStrokeWidth);
-            } else {
-                applyStrokeWidth(activeObj);
-            }
-            fabricCanvas.renderAll();
-        }
-    });
+    resizeCanvas() {
+        const toolbarHeight = document.querySelector('.toolbar').offsetHeight + 20;
+        const newWidth = window.innerWidth * 0.95;
+        const newHeight = Math.max(200, (window.innerHeight - toolbarHeight) * 0.95);
+        this.canvas.setWidth(newWidth);
+        this.canvas.setHeight(newHeight);
+        this.canvas.calcOffset();
+        this.canvas.renderAll();
+    }
 
-    fabricCanvas.on('mouse:down', (o) => {
-        if (currentTool === 'select') {
-            if (isPlacingSvgMode && o.target !== loadedSvgGroup) {
-                setPlacingSvgMode(false); // Finalize by clicking off
-            }
-            return; // Fabric handles selection
-        }
-        if (isPlacingSvgMode) return; // Don't draw new shapes while placing SVG
+    clear() {
+        this.canvas.clear();
+        this.canvas.backgroundColor = '#fff';
+        this.canvas.renderAll();
+    }
 
-        isDrawingShape = true;
-        startCoords = fabricCanvas.getPointer(o.e);
-
-        const commonProps = {
-            stroke: currentColor,
-            strokeWidth: currentStrokeWidth,
-            fill: 'transparent',
-            selectable: false,
-            evented: false
-        };
-
-        switch (currentTool) {
-            case 'line':
-                currentShape = new fabric.Line([startCoords.x, startCoords.y, startCoords.x, startCoords.y], commonProps);
-                break;
-            case 'rect':
-                currentShape = new fabric.Rect({
-                    left: startCoords.x,
-                    top: startCoords.y,
-                    width: 0,
-                    height: 0,
-                    ...commonProps
-                });
-                break;
-            case 'circle':
-                currentShape = new fabric.Circle({
-                    left: startCoords.x, // Center X
-                    top: startCoords.y,  // Center Y
-                    radius: 0,
-                    originX: 'center',
-                    originY: 'center',
-                    ...commonProps
-                });
-                break;
-        }
-        if (currentShape) fabricCanvas.add(currentShape);
-    });
-
-    fabricCanvas.on('mouse:move', (o) => {
-        if (!isDrawingShape || !currentShape || currentTool === 'select' || isPlacingSvgMode) return;
-
-        const pointer = fabricCanvas.getPointer(o.e);
-
-        switch (currentTool) {
-            case 'line':
-                currentShape.set({ x2: pointer.x, y2: pointer.y });
-                break;
-            case 'rect':
-                const width = pointer.x - startCoords.x;
-                const height = pointer.y - startCoords.y;
-                currentShape.set({
-                    width: Math.abs(width),
-                    height: Math.abs(height),
-                    left: width > 0 ? startCoords.x : pointer.x,
-                    top: height > 0 ? startCoords.y : pointer.y,
-                });
-                break;
-            case 'circle':
-                const radius = Math.sqrt(Math.pow(pointer.x - startCoords.x, 2) + Math.pow(pointer.y - startCoords.y, 2));
-                currentShape.set({ radius: radius });
-                break;
-        }
-        fabricCanvas.renderAll();
-    });
-
-    fabricCanvas.on('mouse:up', (o) => {
-        if (isDrawingShape && currentShape) {
-            currentShape.set({ selectable: true, evented: true });
-            // Remove tiny shapes
-            if (currentTool === 'line' && (Math.abs(currentShape.x1 - currentShape.x2) < 3 && Math.abs(currentShape.y1 - currentShape.y2) < 3)) {
-                fabricCanvas.remove(currentShape);
-            } else if (currentTool === 'rect' && (currentShape.width < 3 || currentShape.height < 3)) {
-                fabricCanvas.remove(currentShape);
-            } else if (currentTool === 'circle' && currentShape.radius < 2) {
-                fabricCanvas.remove(currentShape);
-            }
-            currentShape = null;
-        }
-        isDrawingShape = false;
-        startCoords = null;
-
-        if (currentTool !== 'select' && !isPlacingSvgMode) {
-            // Optionally switch to select tool after drawing
-            // setTimeout(() => activateTool('select'), 50);
-        }
-    });
-
-    loadSvgButton.addEventListener('click', () => {
-        if (isPlacingSvgMode) {
-            setPlacingSvgMode(false); // Finalize current SVG if any
-        }
-        loadSvgInput.click();
-    });
-
-    loadSvgInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        if (file.type !== "image/svg+xml") {
-            alert("Please select an SVG file.");
-            loadSvgInput.value = '';
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const svgString = e.target.result;
-            fabric.loadSVGFromString(svgString, (objects, options) => {
-                if (!objects || objects.length === 0) {
-                    alert("Could not load SVG or SVG is empty/unsupported.");
-                    return;
-                }
-                const group = fabric.util.groupSVGElements(objects, options);
-                group.getObjects().forEach(obj => {
-                    // Preserve all original attributes from the SVG
-                    if (obj.type === 'path') {
-                        // For paths, ensure we have at least basic stroke properties if none exist
-                        if (!obj.stroke) {
-                            obj.set({ stroke: currentColor, strokeWidth: currentStrokeWidth });
-                        }
-                    }
-                    
-                    // Preserve original fill if it exists, otherwise set to transparent
-                    if (!obj.fill) {
-                        obj.set('fill', 'transparent');
-                    }
-                    
-                    // Ensure stroke properties exist but don't override if they're already set
-                    if (!obj.stroke) {
-                        obj.set('stroke', currentColor);
-                    }
-                    if (!obj.strokeWidth) {
-                        obj.set('strokeWidth', currentStrokeWidth);
-                    }
-                });
-                setPlacingSvgMode(true, group);
-            });
-            loadSvgInput.value = '';
-        };
-        reader.onerror = (e) => {
-            console.error("Error reading file:", e);
-            alert("Error reading SVG file.");
-            loadSvgInput.value = '';
-        };
-        reader.readAsText(file);
-    });
-
-    document.getElementById('clear-canvas').addEventListener('click', () => {
-        if (isPlacingSvgMode) {
-            setPlacingSvgMode(false); // Clear placement mode
-        }
-        fabricCanvas.clear();
-        fabricCanvas.backgroundColor = '#fff';
-        fabricCanvas.renderAll();
-    });
-
-    document.getElementById('save-svg').addEventListener('click', () => {
-        if (isPlacingSvgMode) {
-            setPlacingSvgMode(false); // Finalize placement
-        }
-        if (currentShape) { // If a shape is being actively drawn, discard it
-            fabricCanvas.remove(currentShape);
-            currentShape = null;
-            isDrawingShape = false;
-        }
-        const svgData = fabricCanvas.toSVG({ suppressPreamble: true });
+    saveAsSVG() {
+        const svgData = this.canvas.toSVG({ suppressPreamble: true });
         const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -330,21 +44,459 @@ document.addEventListener('DOMContentLoaded', () => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    });
+    }
+}
 
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (document.activeElement.tagName === 'INPUT') return; // Don't delete if typing in input
-
-            const activeObjects = fabricCanvas.getActiveObjects(); // Use getActiveObjects for multiselect
-            if (activeObjects.length > 0) {
-                activeObjects.forEach(obj => fabricCanvas.remove(obj));
-                fabricCanvas.discardActiveObject(); // Deselect
-                fabricCanvas.renderAll();
+// Tool Manager Class
+class ToolManager {
+    constructor(canvasManager) {
+        this.canvas = canvasManager.canvas;
+        this.currentTool = 'line';
+        this.currentColor = '#000000';
+        this.currentStrokeWidth = 2;
+        this.isDrawingShape = false;
+        this.startCoords = null;
+        this.currentShape = null;
+        this.brushPoints = [];
+        this.brushOptions = {
+            size: 16,
+            thinning: 0.5,
+            smoothing: 0.5,
+            streamline: 0.5,
+            easing: (t) => t,
+            start: {
+                taper: true,
+                easing: (t) => t * t,
+                cap: true
+            },
+            end: {
+                taper: true,
+                easing: (t) => t * t,
+                cap: true
             }
-        }
-    });
+        };
+        this.setupToolButtons();
+    }
 
-    // Initial tool activation
-    activateTool('line');
+    setupToolButtons() {
+        const toolButtons = document.querySelectorAll('.tool-button');
+        toolButtons.forEach(button => {
+            button.addEventListener('click', () => this.activateTool(button.dataset.tool));
+        });
+    }
+
+    activateTool(toolName) {
+        const toolButtons = document.querySelectorAll('.tool-button');
+        toolButtons.forEach(btn => btn.classList.remove('active'));
+        const activeButton = document.getElementById(`tool-${toolName}`);
+        if (activeButton) activeButton.classList.add('active');
+
+        this.currentTool = toolName;
+        this.updateCanvasMode();
+    }
+
+    updateCanvasMode() {
+        if (this.currentTool === 'select') {
+            this.canvas.isDrawingMode = false;
+            this.canvas.selection = true;
+            this.canvas.defaultCursor = 'default';
+            this.canvas.hoverCursor = 'move';
+            this.canvas.getObjects().forEach(obj => obj.set({ selectable: true, evented: true }));
+        } else if (this.currentTool === 'brush') {
+            this.canvas.isDrawingMode = true;
+            this.canvas.selection = false;
+            this.canvas.defaultCursor = 'crosshair';
+            this.canvas.hoverCursor = 'crosshair';
+            this.canvas.getObjects().forEach(obj => obj.set({ selectable: false, evented: false }));
+            this.setupBrushMode();
+        } else {
+            this.canvas.isDrawingMode = false;
+            this.canvas.selection = false;
+            this.canvas.defaultCursor = 'crosshair';
+            this.canvas.hoverCursor = 'crosshair';
+            this.canvas.getObjects().forEach(obj => obj.set({ selectable: false, evented: false }));
+        }
+        this.canvas.discardActiveObject().renderAll();
+    }
+
+    setupBrushMode() {
+        this.canvas.on('mouse:down', (o) => {
+            if (this.currentTool !== 'brush') return;
+            this.brushPoints = [];
+            const pointer = this.canvas.getPointer(o.e);
+            this.brushPoints.push([pointer.x, pointer.y, 0.5]); // Add pressure
+        });
+
+        this.canvas.on('mouse:move', (o) => {
+            if (this.currentTool !== 'brush' || !this.brushPoints.length) return;
+            const pointer = this.canvas.getPointer(o.e);
+            this.brushPoints.push([pointer.x, pointer.y, 0.5]); // Add pressure
+            this.updateBrushStroke();
+        });
+
+        this.canvas.on('mouse:up', () => {
+            if (this.currentTool !== 'brush' || !this.brushPoints.length) return;
+            this.finalizeBrushStroke();
+        });
+    }
+
+    updateBrushStroke() {
+        if (this.brushPoints.length < 2) return;
+
+        const stroke = perfectFreehand.getStroke(this.brushPoints, {
+            ...this.brushOptions,
+            size: this.currentStrokeWidth * 8,
+            color: this.currentColor
+        });
+
+        if (this.currentShape) {
+            this.canvas.remove(this.currentShape);
+        }
+
+        const pathData = this.getSvgPathFromStroke(stroke);
+        this.currentShape = new fabric.Path(pathData, {
+            fill: this.currentColor,
+            selectable: false,
+            evented: false
+        });
+
+        this.canvas.add(this.currentShape);
+        this.canvas.renderAll();
+    }
+
+    finalizeBrushStroke() {
+        if (this.currentShape) {
+            this.currentShape.set({
+                selectable: true,
+                evented: true
+            });
+            this.currentShape = null;
+        }
+        this.brushPoints = [];
+    }
+
+    getSvgPathFromStroke(points) {
+        const d = points.reduce((acc, [x0, y0], i, arr) => {
+            const [x1, y1] = arr[(i + 1) % arr.length];
+            acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+            return acc;
+        }, ['M', ...points[0], 'Q']);
+
+        return d.join(' ');
+    }
+}
+
+// SVG Manager Class
+class SVGManager {
+    constructor(canvasManager, toolManager) {
+        this.canvas = canvasManager.canvas;
+        this.toolManager = toolManager;
+        this.isPlacingSvgMode = false;
+        this.loadedSvgGroup = null;
+        this.setupSVGHandlers();
+    }
+
+    setupSVGHandlers() {
+        const loadSvgInput = document.getElementById('load-svg-input');
+        const loadSvgButton = document.getElementById('load-svg-button');
+
+        loadSvgButton.addEventListener('click', () => {
+            if (this.isPlacingSvgMode) {
+                this.setPlacingSvgMode(false);
+            }
+            loadSvgInput.click();
+        });
+
+        loadSvgInput.addEventListener('change', (event) => this.handleSVGFile(event));
+    }
+
+    handleSVGFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.type !== "image/svg+xml") {
+            alert("Please select an SVG file.");
+            event.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => this.processSVGString(e.target.result);
+        reader.onerror = (e) => {
+            console.error("Error reading file:", e);
+            alert("Error reading SVG file.");
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    processSVGString(svgString) {
+        fabric.loadSVGFromString(svgString, (objects, options) => {
+            if (!objects || objects.length === 0) {
+                alert("Could not load SVG or SVG is empty/unsupported.");
+                return;
+            }
+            const group = fabric.util.groupSVGElements(objects, options);
+            this.prepareSVGGroup(group);
+            this.setPlacingSvgMode(true, group);
+        });
+    }
+
+    prepareSVGGroup(group) {
+        group.getObjects().forEach(obj => {
+            if (obj.type === 'path' && !obj.stroke) {
+                obj.set({ stroke: this.toolManager.currentColor, strokeWidth: this.toolManager.currentStrokeWidth });
+            }
+            if (!obj.fill) obj.set('fill', 'transparent');
+            if (!obj.stroke) obj.set('stroke', this.toolManager.currentColor);
+            if (!obj.strokeWidth) obj.set('strokeWidth', this.toolManager.currentStrokeWidth);
+        });
+    }
+
+    setPlacingSvgMode(active, svgGroup = null) {
+        this.isPlacingSvgMode = active;
+        this.loadedSvgGroup = svgGroup;
+        this.canvas.discardActiveObject();
+
+        if (active && svgGroup) {
+            document.body.classList.add('placing-svg-mode');
+            this.canvas.add(svgGroup);
+            this.canvas.centerObject(svgGroup);
+            this.scaleSVGToFit(svgGroup);
+            this.canvas.setActiveObject(svgGroup);
+            this.canvas.renderAll();
+            this.showStatus("SVG loaded. Use handles to resize/rotate, drag to position. Click tool or canvas to finalize.");
+            this.toolManager.activateTool('select');
+        } else {
+            document.body.classList.remove('placing-svg-mode');
+            this.showStatus("");
+            this.loadedSvgGroup = null;
+        }
+    }
+
+    scaleSVGToFit(svgGroup) {
+        const canvasRatio = this.canvas.width / this.canvas.height;
+        const svgRatio = svgGroup.width / svgGroup.height;
+        let scaleFactor;
+        if (canvasRatio > svgRatio) {
+            scaleFactor = (this.canvas.height * 0.5) / svgGroup.height;
+        } else {
+            scaleFactor = (this.canvas.width * 0.5) / svgGroup.width;
+        }
+        svgGroup.scale(scaleFactor);
+        svgGroup.setCoords();
+        this.canvas.centerObject(svgGroup);
+    }
+
+    showStatus(message) {
+        const statusMessage = document.getElementById('status-message');
+        statusMessage.textContent = message;
+        statusMessage.style.display = message ? 'block' : 'none';
+    }
+}
+
+// Main Application Class
+class DrawingApp {
+    constructor() {
+        this.canvasManager = new CanvasManager('drawing-canvas');
+        this.toolManager = new ToolManager(this.canvasManager);
+        this.svgManager = new SVGManager(this.canvasManager, this.toolManager);
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Color picker
+        document.getElementById('color-picker').addEventListener('input', (e) => {
+            this.toolManager.currentColor = e.target.value;
+            this.updateActiveObjectColor();
+        });
+
+        // Stroke width picker
+        document.getElementById('stroke-width-picker').addEventListener('input', (e) => {
+            this.toolManager.currentStrokeWidth = parseInt(e.target.value, 10) || 1;
+            this.updateActiveObjectStrokeWidth();
+        });
+
+        // Clear canvas button
+        document.getElementById('clear-canvas').addEventListener('click', () => {
+            if (this.svgManager.isPlacingSvgMode) {
+                this.svgManager.setPlacingSvgMode(false);
+            }
+            this.canvasManager.clear();
+        });
+
+        // Save SVG button
+        document.getElementById('save-svg').addEventListener('click', () => {
+            if (this.svgManager.isPlacingSvgMode) {
+                this.svgManager.setPlacingSvgMode(false);
+            }
+            if (this.toolManager.currentShape) {
+                this.canvasManager.canvas.remove(this.toolManager.currentShape);
+                this.toolManager.currentShape = null;
+                this.toolManager.isDrawingShape = false;
+            }
+            this.canvasManager.saveAsSVG();
+        });
+
+        // Delete key handler
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (document.activeElement.tagName === 'INPUT') return;
+                const activeObjects = this.canvasManager.canvas.getActiveObjects();
+                if (activeObjects.length > 0) {
+                    activeObjects.forEach(obj => this.canvasManager.canvas.remove(obj));
+                    this.canvasManager.canvas.discardActiveObject();
+                    this.canvasManager.canvas.renderAll();
+                }
+            }
+        });
+
+        // Canvas mouse events
+        this.setupCanvasMouseEvents();
+    }
+
+    setupCanvasMouseEvents() {
+        const canvas = this.canvasManager.canvas;
+        const toolManager = this.toolManager;
+        const svgManager = this.svgManager;
+
+        canvas.on('mouse:down', (o) => {
+            if (toolManager.currentTool === 'select') {
+                if (svgManager.isPlacingSvgMode && o.target !== svgManager.loadedSvgGroup) {
+                    svgManager.setPlacingSvgMode(false);
+                }
+                return;
+            }
+            if (svgManager.isPlacingSvgMode) return;
+
+            toolManager.isDrawingShape = true;
+            toolManager.startCoords = canvas.getPointer(o.e);
+
+            const commonProps = {
+                stroke: toolManager.currentColor,
+                strokeWidth: toolManager.currentStrokeWidth,
+                fill: 'transparent',
+                selectable: false,
+                evented: false
+            };
+
+            switch (toolManager.currentTool) {
+                case 'line':
+                    toolManager.currentShape = new fabric.Line(
+                        [toolManager.startCoords.x, toolManager.startCoords.y, 
+                         toolManager.startCoords.x, toolManager.startCoords.y], 
+                        commonProps
+                    );
+                    break;
+                case 'rect':
+                    toolManager.currentShape = new fabric.Rect({
+                        left: toolManager.startCoords.x,
+                        top: toolManager.startCoords.y,
+                        width: 0,
+                        height: 0,
+                        ...commonProps
+                    });
+                    break;
+                case 'circle':
+                    toolManager.currentShape = new fabric.Circle({
+                        left: toolManager.startCoords.x,
+                        top: toolManager.startCoords.y,
+                        radius: 0,
+                        originX: 'center',
+                        originY: 'center',
+                        ...commonProps
+                    });
+                    break;
+            }
+            if (toolManager.currentShape) canvas.add(toolManager.currentShape);
+        });
+
+        canvas.on('mouse:move', (o) => {
+            if (!toolManager.isDrawingShape || !toolManager.currentShape || 
+                toolManager.currentTool === 'select' || svgManager.isPlacingSvgMode) return;
+
+            const pointer = canvas.getPointer(o.e);
+
+            switch (toolManager.currentTool) {
+                case 'line':
+                    toolManager.currentShape.set({ x2: pointer.x, y2: pointer.y });
+                    break;
+                case 'rect':
+                    const width = pointer.x - toolManager.startCoords.x;
+                    const height = pointer.y - toolManager.startCoords.y;
+                    toolManager.currentShape.set({
+                        width: Math.abs(width),
+                        height: Math.abs(height),
+                        left: width > 0 ? toolManager.startCoords.x : pointer.x,
+                        top: height > 0 ? toolManager.startCoords.y : pointer.y,
+                    });
+                    break;
+                case 'circle':
+                    const radius = Math.sqrt(
+                        Math.pow(pointer.x - toolManager.startCoords.x, 2) + 
+                        Math.pow(pointer.y - toolManager.startCoords.y, 2)
+                    );
+                    toolManager.currentShape.set({ radius: radius });
+                    break;
+            }
+            canvas.renderAll();
+        });
+
+        canvas.on('mouse:up', (o) => {
+            if (toolManager.isDrawingShape && toolManager.currentShape) {
+                toolManager.currentShape.set({ selectable: true, evented: true });
+                
+                // Remove tiny shapes
+                if (toolManager.currentTool === 'line' && 
+                    (Math.abs(toolManager.currentShape.x1 - toolManager.currentShape.x2) < 3 && 
+                     Math.abs(toolManager.currentShape.y1 - toolManager.currentShape.y2) < 3)) {
+                    canvas.remove(toolManager.currentShape);
+                } else if (toolManager.currentTool === 'rect' && 
+                         (toolManager.currentShape.width < 3 || toolManager.currentShape.height < 3)) {
+                    canvas.remove(toolManager.currentShape);
+                } else if (toolManager.currentTool === 'circle' && toolManager.currentShape.radius < 2) {
+                    canvas.remove(toolManager.currentShape);
+                }
+                toolManager.currentShape = null;
+            }
+            toolManager.isDrawingShape = false;
+            toolManager.startCoords = null;
+        });
+    }
+
+    updateActiveObjectColor() {
+        const activeObj = this.canvasManager.canvas.getActiveObject();
+        if (activeObj) {
+            const applyColor = (obj) => {
+                if (obj.stroke || obj.type === 'path') obj.set('stroke', this.toolManager.currentColor);
+            };
+            if (activeObj.isType('activeSelection')) {
+                activeObj.forEachObject(applyColor);
+            } else {
+                applyColor(activeObj);
+            }
+            this.canvasManager.canvas.renderAll();
+        }
+    }
+
+    updateActiveObjectStrokeWidth() {
+        const activeObj = this.canvasManager.canvas.getActiveObject();
+        if (activeObj) {
+            const applyStrokeWidth = (obj) => {
+                if (obj.strokeWidth || obj.type === 'path') {
+                    obj.set('strokeWidth', this.toolManager.currentStrokeWidth);
+                }
+            };
+            if (activeObj.isType('activeSelection')) {
+                activeObj.forEachObject(applyStrokeWidth);
+            } else {
+                applyStrokeWidth(activeObj);
+            }
+            this.canvasManager.canvas.renderAll();
+        }
+    }
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new DrawingApp();
 });

@@ -269,13 +269,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const group = fabric.util.groupSVGElements(objects, options);
                 group.getObjects().forEach(obj => {
-                    if (obj.type === 'path' && !obj.stroke) { // Ensure paths have a stroke for visibility
-                        obj.set({ stroke: currentColor, strokeWidth: obj.strokeWidth || currentStrokeWidth });
-                    } else {
-                        if (obj.stroke) obj.set('stroke', obj.stroke); else obj.set('stroke', currentColor);
-                        if (obj.strokeWidth) obj.set('strokeWidth', obj.strokeWidth); else obj.set('strokeWidth', currentStrokeWidth);
+                    // Preserve all original attributes from the SVG
+                    if (obj.type === 'path') {
+                        // For paths, ensure we have at least basic stroke properties if none exist
+                        if (!obj.stroke) {
+                            obj.set({ stroke: currentColor, strokeWidth: currentStrokeWidth });
+                        }
                     }
-                    obj.set('fill', 'transparent'); // Override fills
+                    
+                    // Preserve original fill if it exists, otherwise set to transparent
+                    if (!obj.fill) {
+                        obj.set('fill', 'transparent');
+                    }
+                    
+                    // Ensure stroke properties exist but don't override if they're already set
+                    if (!obj.stroke) {
+                        obj.set('stroke', currentColor);
+                    }
+                    if (!obj.strokeWidth) {
+                        obj.set('strokeWidth', currentStrokeWidth);
+                    }
                 });
                 setPlacingSvgMode(true, group);
             });

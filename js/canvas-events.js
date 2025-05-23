@@ -33,12 +33,6 @@ export function setupCanvasEventHandlers(appState) {
         }
     }
 
-    // Actualizar configuración cuando cambia la herramienta
-    appState.setTool = (tool) => {
-        appState.currentTool = tool;
-        updateSelectionSettings();
-    };
-
     fabricCanvas.on('mouse:down', (o) => {
         const event = o.e;
         // --- Paneo con Botón Central (Rueda) ---

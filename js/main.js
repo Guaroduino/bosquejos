@@ -11,23 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const appState = {
         currentTool: 'select',
-        isDrawing: false, // Para herramientas de arrastre simple (rect, circle, line)
+        isDrawing: false, 
         startX: 0, startY: 0,
-        currentShape: null, // Para rect, circle, line
-        isPanning: false,
+        currentShape: null, 
+        isPanningWithSpacebar: false, // Renombrado para claridad
+        isMiddleMouseButtonPanning: false, // NUEVO para el paneo con botón central
         
-        // Polilínea
-        polylinePoints: [],
-        tempPolyline: null,
-        // tempLine es usado por polyline y spline para la guía al cursor
-        
-        // Spline (Curva Bézier)
-        bezierPathData: '',      
-        bezierCurrentSegmentPoints: [], 
-        bezierLastP1: null,        
-        isDrawingSplineSegment: false, 
-        tempSplinePathObject: null, 
-        tempSplineGuideLine: null, // Renombrado desde tempLine para claridad
+        polylinePoints: [], tempPolyline: null,
+        bezierPathData: '', bezierCurrentSegmentPoints: [], bezierLastP1: null,        
+        isDrawingSplineSegment: false, tempSplinePathObject: null, tempSplineGuideLine: null,
 
         fabricCanvas: fabricCanvas,
         
@@ -35,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Limpieza de herramientas anteriores
             if (appState.currentTool === 'polyline' && tool !== 'polyline') {
                 if (appState.tempPolyline) appState.fabricCanvas.remove(appState.tempPolyline); appState.tempPolyline = null;
-                // tempLine (guía al cursor) se limpia en la herramienta respectiva al cambiar
                 appState.polylinePoints = [];
             }
             if (appState.currentTool === 'spline' && tool !== 'spline') {
@@ -45,11 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             appState.currentTool = tool;
-            setActiveToolState(tool, appState); // Llama a la función de ui-interactions
+            setActiveToolState(tool, appState); 
         },
         getActiveTool: () => appState.currentTool,
-        updateActiveToolIndicator: updateActiveToolIndicatorInUI, // Referencia a la función de UI
-        closeAllDropdowns: closeAllDropdownsFromUI, // Referencia a la función de UI
+        updateActiveToolIndicator: updateActiveToolIndicatorInUI, 
+        closeAllDropdowns: closeAllDropdownsFromUI, 
         applyStyleToSelected: (property, value, isTextProperty = false) => {
             applyStyleToSelectedObjects(property, value, appState, isTextProperty);
         },
@@ -58,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     setupUIEventListeners(appState);
-    setupCanvasEventHandlers(appState);
+    setupCanvasEventHandlers(appState); // Aquí se pasarán los nuevos estados
     setupFileHandlers(appState);
     setupObjectManagement(appState);
     setupViewControls(appState);
@@ -72,5 +63,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     appState.setTool('select');
 
-    console.log('Editor SVG Modular con Fabric.js inicializado.');
+    console.log('Editor SVG Modular v4 con Fabric.js inicializado.');
 });

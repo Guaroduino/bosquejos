@@ -22,59 +22,70 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     display: flex;
     height: 100vh;
     overflow: hidden;
+    position: relative; /* Para que el botón de toggle se posicione relativo a este */
 }
 
 /* Panel de la Librería SVG */
 .svg-library-panel {
     width: 250px; 
-    min-width: 200px; 
+    min-width: 250px; /* Fijar min-width para que no se encoja demasiado con el contenido */
     background-color: var(--toolbar-bg); 
     border-right: 1px solid var(--border-color);
     padding: 10px;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease, transform 0.3s ease; /* Añadir transform para suavizar el colapso */
-    position: relative; 
+    transition: transform 0.3s ease-in-out; /* Transición para el deslizamiento */
+    position: relative; /* z-index funciona en elementos posicionados */
     z-index: 90; 
+    /* transform: translateX(0); Lo quitamos de aquí para el estado por defecto */
 }
 
 .svg-library-panel.collapsed {
-    width: 0; /* Colapsar completamente */
-    min-width: 0;
-    padding: 10px 0; 
-    overflow: hidden; /* Ocultar contenido cuando está colapsado */
-    border-right: none; /* Ocultar borde cuando está colapsado */
-    transform: translateX(-100%); /* Mover fuera de la pantalla */
-}
-.svg-library-panel.collapsed + .main-content .toggle-library-btn { /* Estilo para el botón cuando el panel está colapsado */
-    left: 5px; /* Posicionar cerca del borde */
-    transform: translateY(-50%) rotate(180deg); /* Rotar la flecha */
+    transform: translateX(-100%); /* Mover fuera de la vista a la izquierda */
+    /* width: 0; min-width: 0; padding: 0; border-right: none; Ya no son necesarios con transform */
 }
 
-
+/* Botón para mostrar/ocultar la librería */
 .toggle-library-btn {
-    position: fixed; /* Para que se mantenga visible incluso si el panel se colapsa */
+    position: fixed; /* Fijado al viewport para que siempre esté visible */
     top: 50%;
-    left: 235px; /* (ancho del panel - mitad del botón) */
-    transform: translateY(-50%);
+    left: 5px; /* Distancia inicial desde la izquierda */
+    transform: translateY(-50%) rotate(0deg); /* Estado inicial (flecha para abrir) */
     width: 30px;
-    height: 60px; /* Más alto para mejor área de clic */
+    height: 60px; 
     background-color: var(--primary-accent);
     color: white;
     border: none;
-    border-top-right-radius: 8px;  /* Redondear esquinas */
+    border-top-right-radius: 8px;  
     border-bottom-right-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.2em;
+    font-weight: bold;
     box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    z-index: 95;
-    transition: transform 0.3s ease, left 0.3s ease;
+    z-index: 105; /* Encima de todo, incluso la toolbar si se superponen */
+    transition: transform 0.3s ease-in-out, left 0.3s ease-in-out;
 }
 .toggle-library-btn:hover {
     background-color: #0056b3;
+}
+
+/* Cuando el panel NO está colapsado, el botón se mueve con el panel */
+.svg-library-panel:not(.collapsed) + .main-content .toggle-library-btn {
+    /* Este selector es si el botón estuviera DENTRO de main-content */
+    /* Como ahora es fixed, no necesitamos este ajuste de main-content para el botón */
+}
+/* Ajustar el botón cuando el panel está visible */
+body:has(.svg-library-panel:not(.collapsed)) .toggle-library-btn {
+    left: 235px; /* ancho del panel (250px) - mitad del botón (15px) + un pequeño offset (5px) */
+    transform: translateY(-50%) rotate(180deg); /* Flecha para cerrar */
+}
+/* Si el panel está colapsado, el botón se queda a la izquierda */
+body:has(.svg-library-panel.collapsed) .toggle-library-btn {
+    left: 5px;
+    transform: translateY(-50%) rotate(0deg); /* Flecha para abrir */
 }
 
 
@@ -84,7 +95,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     font-size: 1.1em;
     color: var(--primary-accent);
     text-align: center;
-    white-space: nowrap; /* Evitar que el título se rompa al colapsar */
+    white-space: nowrap; 
 }
 
 .library-items-container {
@@ -105,14 +116,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     align-items: center;
     transition: background-color 0.2s;
     background-color: var(--input-bg);
-    aspect-ratio: 1 / 1; /* Para mantenerlos cuadrados */
+    aspect-ratio: 1 / 1; 
 }
 .library-item:hover {
     background-color: var(--button-hover-bg);
     border-color: var(--primary-accent);
 }
 .library-item svg {
-    width: 90%; /* Ajustar para que no toque los bordes */
+    width: 90%; 
     height: 90%;
     max-height: 60px; 
     pointer-events: none; 
@@ -124,7 +135,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
     display: flex;
     flex-direction: column;
     overflow: hidden; 
-    transition: margin-left 0.3s ease; /* Para ajustar cuando la librería se colapsa */
+    /* Ya no necesitamos margin-left aquí si el panel se desliza por encima o el botón es fixed */
 }
 
 /* Estilos de la Toolbar Superior (como estaban) */
@@ -161,8 +172,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 .canvas-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; background-color: var(--bg-color); overflow: auto; position: relative; }
 #editor-canvas { background-color: var(--canvas-bg); box-shadow: 0 0 15px rgba(0,0,0,0.1); }
 
-/* Clase para feedback de drag over en el canvas */
 .canvas-wrapper.drag-over {
     border: 2px dashed var(--primary-accent);
-    background-color: #eef7ff; /* Un azul muy claro */
+    background-color: #eef7ff; 
 }

@@ -12,7 +12,6 @@ function isDrawingTool(tool) {
 
 export function setupCanvasEventHandlers(appState) {
     const fabricCanvas = appState.fabricCanvas;
-    let lastClientX, lastClientY; // Para el paneo con botón central
 
     // Inicializar las reglas
     const rulers = new CanvasRulers(fabricCanvas);
@@ -33,25 +32,30 @@ export function setupCanvasEventHandlers(appState) {
         }
     }
 
+    let isPanningWithSpacebar = false;
+    let isMiddleMouseButtonPanning = false;
+    let lastClientX, lastClientY;
+
     fabricCanvas.on('mouse:down', (o) => {
         const event = o.e;
-        // --- Paneo con Botón Central (Rueda) ---
-        if (event.button === 1) { // 1 es el botón central del ratón
-            appState.isMiddleMouseButtonPanning = true;
+        // Paneo con botón central
+        if (event.button === 1) {
+            isMiddleMouseButtonPanning = true;
             lastClientX = event.clientX;
             lastClientY = event.clientY;
             fabricCanvas.defaultCursor = 'grabbing';
-            fabricCanvas.selection = false;
-            fabricCanvas.renderAll();
             event.preventDefault();
-            // Escuchar paneo globalmente
-            window.addEventListener('mousemove', handleGlobalPanMove);
-            window.addEventListener('mouseup', handleGlobalPanUp);
             return;
         }
-
-        if (appState.isPanningWithSpacebar) return; // Si ya estamos paneando con barra espaciadora
-
+        // Paneo con barra espaciadora + botón izquierdo
+        if (isPanningWithSpacebar && event.button === 0) {
+            isMiddleMouseButtonPanning = true;
+            lastClientX = event.clientX;
+            lastClientY = event.clientY;
+            fabricCanvas.defaultCursor = 'grabbing';
+            event.preventDefault();
+            return;
+        }
         // Si estamos en modo dibujo, no permitir selección
         if (isDrawingTool(appState.currentTool)) {
             fabricCanvas.selection = false;
@@ -69,46 +73,18 @@ export function setupCanvasEventHandlers(appState) {
         }
     });
 
-    function handleGlobalPanMove(e) {
-        if (appState.isMiddleMouseButtonPanning) {
-            const deltaX = e.clientX - lastClientX;
-            const deltaY = e.clientY - lastClientY;
-            lastClientX = e.clientX;
-            lastClientY = e.clientY;
-            fabricCanvas.relativePan(new fabric.Point(deltaX, deltaY));
-            rulers.updateRulers();
-            e.preventDefault();
-        }
-    }
-    function handleGlobalPanUp(e) {
-        if (e.button === 1 && appState.isMiddleMouseButtonPanning) {
-            appState.isMiddleMouseButtonPanning = false;
-            fabricCanvas.defaultCursor = isDrawingTool(appState.currentTool) ? 'crosshair' : 'default';
-            window.removeEventListener('mousemove', handleGlobalPanMove);
-            window.removeEventListener('mouseup', handleGlobalPanUp);
-        }
-    }
-
     fabricCanvas.on('mouse:move', (o) => {
         const event = o.e;
-        // --- Paneo con Botón Central (Rueda) ---
-        if (appState.isMiddleMouseButtonPanning) {
+        if (isMiddleMouseButtonPanning) {
             const deltaX = event.clientX - lastClientX;
             const deltaY = event.clientY - lastClientY;
             lastClientX = event.clientX;
             lastClientY = event.clientY;
-
             fabricCanvas.relativePan(new fabric.Point(deltaX, deltaY));
-            rulers.updateRulers(); // Actualizar reglas después del paneo
+            rulers.updateRulers();
+            event.preventDefault();
             return;
         }
-
-        // --- Paneo con Barra Espaciadora ---
-        if (appState.isPanningWithSpacebar && event.buttons === 1) { // event.buttons === 1 es clic izquierdo
-            fabricCanvas.relativePan(new fabric.Point(event.movementX, event.movementY)); 
-            return; 
-        }
-
         // --- Lógica de herramientas ---
         switch (appState.currentTool) {
             case 'rect': case 'circle': case 'line':
@@ -122,20 +98,12 @@ export function setupCanvasEventHandlers(appState) {
 
     fabricCanvas.on('mouse:up', (o) => {
         const event = o.e;
-        // --- Paneo con Botón Central (Rueda) ---
-        if (event.button === 1 && appState.isMiddleMouseButtonPanning) {
-            appState.isMiddleMouseButtonPanning = false;
-            updateSelectionSettings();
-            return; // No procesar otras lógicas de mouse:up
+        if ((event.button === 1 || (isPanningWithSpacebar && event.button === 0)) && isMiddleMouseButtonPanning) {
+            isMiddleMouseButtonPanning = false;
+            fabricCanvas.defaultCursor = isDrawingTool(appState.currentTool) ? 'crosshair' : 'default';
+            event.preventDefault();
+            return;
         }
-        
-        // --- Paneo con Barra Espaciadora ---
-        if (appState.isPanningWithSpacebar) { // Se maneja en keyup
-            // appState.isPanningWithSpacebar = false; // Esto se resetea en keyup
-            // Restaurar cursor y selección
-            // ... (lógica similar a la de arriba, pero se hace en keyup)
-        }
-
         if (appState.currentTool === 'polyline' || appState.currentTool === 'spline') return; 
         if (appState.isDrawing && appState.currentShape) {
             handleShapeMouseUp(o, appState);
@@ -171,13 +139,12 @@ export function setupCanvasEventHandlers(appState) {
         }
         if (isInputFocused && e.key !== 'Escape') { if (e.key === 'Enter' && activeEl.tagName !== 'TEXTAREA') activeEl.blur(); return; }
         
-        // --- Paneo con Barra Espaciadora (Inicio) ---
-        if (e.key === ' ' && !isInputFocused && !appState.isPanningWithSpacebar && !appState.isMiddleMouseButtonPanning) { 
-            e.preventDefault(); 
-            appState.isPanningWithSpacebar = true; 
-            fabricCanvas.defaultCursor = 'grab'; 
-            fabricCanvas.selection = false; 
-            fabricCanvas.renderAll(); 
+        if (e.key === ' ' && !isInputFocused && !isPanningWithSpacebar && !isMiddleMouseButtonPanning) {
+            e.preventDefault();
+            isPanningWithSpacebar = true;
+            fabricCanvas.defaultCursor = 'grab';
+            fabricCanvas.selection = false;
+            fabricCanvas.renderAll();
         }
         
         if (e.key === 'Delete' || e.key === 'Backspace') { 
@@ -188,11 +155,12 @@ export function setupCanvasEventHandlers(appState) {
     });
 
     document.addEventListener('keyup', (e) => { 
-        // --- Paneo con Barra Espaciadora (Fin) ---
-        if (e.key===' ' && appState.isPanningWithSpacebar) { 
-            appState.isPanningWithSpacebar=false; 
-            updateSelectionSettings(); 
-        } 
+        if (e.key === ' ' && isPanningWithSpacebar) {
+            isPanningWithSpacebar = false;
+            if (!isMiddleMouseButtonPanning) {
+                fabricCanvas.defaultCursor = isDrawingTool(appState.currentTool) ? 'crosshair' : 'default';
+            }
+        }
     });
 
     // Inicializar la configuración de selección

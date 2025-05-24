@@ -71,34 +71,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     appState.setTool('select');
 
-    // Paneo manual con botón central del mouse sobre el canvas HTML
-    let isManualMiddlePanning = false;
-    let lastPanX = 0, lastPanY = 0;
-    htmlCanvas.addEventListener('mousedown', (e) => {
-        if (e.button === 1 && !['rect','circle','line','polyline','spline','text','pencil'].includes(appState.currentTool)) {
-            isManualMiddlePanning = true;
-            lastPanX = e.clientX;
-            lastPanY = e.clientY;
-            htmlCanvas.style.cursor = 'grabbing';
-            e.preventDefault();
-        }
-    });
-    window.addEventListener('mousemove', (e) => {
-        if (isManualMiddlePanning) {
-            const deltaX = e.clientX - lastPanX;
-            const deltaY = e.clientY - lastPanY;
-            lastPanX = e.clientX;
-            lastPanY = e.clientY;
-            fabricCanvas.relativePan(new fabric.Point(deltaX, deltaY));
-            fabricCanvas.requestRenderAll();
-        }
-    });
-    window.addEventListener('mouseup', (e) => {
-        if (e.button === 1 && isManualMiddlePanning) {
-            isManualMiddlePanning = false;
-            htmlCanvas.style.cursor = '';
-        }
-    });
-
     console.log('Editor SVG Modular v4 con Fabric.js inicializado.');
 });
